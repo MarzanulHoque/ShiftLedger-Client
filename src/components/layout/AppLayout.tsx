@@ -12,10 +12,11 @@ import {
 import { Link, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../auth/store';
 import { initials } from '../../lib/initials';
-import { useNotificationsSocket } from '../../features/notifications/useNotificationsSocket';
 import { useUsers } from '../../features/users/queries';
-import { NotificationBell } from './NotificationBell';
 import { MechanicPlaceholder } from './MechanicPlaceholder';
+// Notifications (bell + SignalR live push) are unplugged for now, per request — the components
+// and API still exist under features/notifications and api/notifications.ts, just not wired in
+// here. Re-add `useNotificationsSocket()` + `<NotificationBell />` to bring them back.
 
 const NAV_ITEMS = [
   { to: '/dashboard', label: 'Dashboard', icon: IconDashboard },
@@ -30,7 +31,6 @@ export function AppLayout() {
   const clearSession = useAuthStore((s) => s.clearSession);
   const location = useLocation();
   const { data: users } = useUsers();
-  useNotificationsSocket();
   const currentUserName = users?.find((u) => u.id === user?.id)?.fullName;
 
   // A valid accessToken but no decoded user means the token's claims didn't parse as expected
@@ -65,7 +65,6 @@ export function AppLayout() {
             <div />
           )}
           <Group gap="sm">
-            <NotificationBell />
             <Menu shadow="md" width={200} position="bottom-end">
               <Menu.Target>
                 <UnstyledButton>
@@ -92,7 +91,7 @@ export function AppLayout() {
           (ties back to the wireframe's blueprint palette) rather than a generic light rail. */}
       <AppShell.Navbar bg="navy.8" style={{ border: 'none' }}>
         <Stack h="100%" gap={0}>
-          <Group h={60} px="lg" gap={8} style={{ borderBottom: '1px solid var(--mantine-color-navy-6)' }}>
+          <Group h={60} px="sm" gap={8} align="center" style={{ borderBottom: '1px solid var(--mantine-color-navy-6)' }}>
             <div
               style={{
                 width: 26,
