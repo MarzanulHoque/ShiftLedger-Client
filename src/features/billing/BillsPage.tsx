@@ -1,26 +1,78 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Badge, Group, Pagination, SegmentedControl, Stack, Table, Text, Title } from '@mantine/core';
+import {
+  Badge,
+  Group,
+  Pagination,
+  Paper,
+  SegmentedControl,
+  SimpleGrid,
+  Stack,
+  Table,
+  Text,
+  ThemeIcon,
+  Title,
+} from '@mantine/core';
+import { IconFileInvoice, IconReceipt2, IconReceiptOff } from '@tabler/icons-react';
 import { formatDateTime } from '../../lib/date';
+import { useAdminDashboard } from '../dashboard/queries';
 import { useOrgSettings } from '../orgSettings/queries';
 import { formatMoney } from '../../lib/money';
 import { PAGE_SIZE, useAllBills } from './useAllBills';
 
 type Filter = 'all' | 'unpaid' | 'paid';
 
+function SummaryTile({
+  icon: Icon,
+  color,
+  label,
+  value,
+}: {
+  icon: typeof IconReceipt2;
+  color: string;
+  label: string;
+  value: string;
+}) {
+  return (
+    <Paper p="md" shadow="sm" style={{ borderTop: `3px solid var(--mantine-color-${color}-6)` }}>
+      <Group justify="space-between" wrap="nowrap">
+        <div>
+          <Text size="xs" tt="uppercase" fw={600} c="dimmed" style={{ letterSpacing: '0.02em' }}>
+            {label}
+          </Text>
+          <Text fz="1.4rem" fw={700} className="tabular-nums">
+            {value}
+          </Text>
+        </div>
+        <ThemeIcon variant="light" color={color} size={34} radius="md">
+          <Icon size={18} stroke={1.75} />
+        </ThemeIcon>
+      </Group>
+    </Paper>
+  );
+}
+
 export function BillsPage() {
   const [filter, setFilter] = useState<Filter>('all');
   const [page, setPage] = useState(1);
   const navigate = useNavigate();
   const { data: orgSettings } = useOrgSettings();
+  const { data: dashboard } = useAdminDashboard();
 
   const isPaid = filter === 'all' ? undefined : filter === 'paid';
   const { data, isLoading } = useAllBills(isPaid, page);
   const totalPages = data ? Math.max(1, Math.ceil(data.totalCount / PAGE_SIZE)) : 1;
+  const money = (amount: number) => formatMoney(amount, orgSettings?.currencyCode);
 
   return (
     <Stack gap="md">
       <Title order={3}>Billing — All Bills</Title>
+
+      <SimpleGrid cols={{ base: 1, sm: 3 }}>
+        <SummaryTile icon={IconFileInvoice} color="steel" label={`${filter === 'all' ? 'Total' : filter === 'paid' ? 'Paid' : 'Unpaid'} bills`} value={String(data?.totalCount ?? 0)} />
+        <SummaryTile icon={IconReceiptOff} color="danger" label="Unpaid outstanding" value={money(dashboard?.unpaidTotal ?? 0)} />
+        <SummaryTile icon={IconReceipt2} color="success" label="Revenue today" value={money(dashboard?.revenueToday ?? 0)} />
+      </SimpleGrid>
 
       <SegmentedControl
         value={filter}

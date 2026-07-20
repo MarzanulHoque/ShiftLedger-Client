@@ -9,7 +9,7 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from '@dnd-kit/core';
-import { Card, Grid, Group, Stack, Text } from '@mantine/core';
+import { Badge, Card, Grid, Group, Paper, Stack, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import type { JobDto, JobStatus } from '../../api/types';
 import { adjacentStatuses } from '../../lib/jobStatusFlow';
@@ -21,29 +21,48 @@ const COLUMNS: JobStatus[] = ['Received', 'InProgress', 'Completed', 'Delivered'
 
 function Column({ status, jobs }: { status: JobStatus; jobs: JobDto[] }) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
+  const meta = STATUS_META[status];
 
   return (
-    <Stack
-      ref={setNodeRef}
-      gap="xs"
-      mih={80}
-      p={4}
-      style={{
-        borderRadius: 4,
-        outline: isOver ? '2px dashed var(--mantine-color-brand-5)' : undefined,
-        outlineOffset: 2,
-        transition: 'outline-color 100ms ease',
-      }}
+    <Paper
+      shadow="sm"
+      h="100%"
+      style={{ display: 'flex', flexDirection: 'column', borderTop: `3px solid var(--mantine-color-${meta.color}-6)` }}
     >
-      {jobs.map((job) => (
-        <JobCard key={job.id} job={job} />
-      ))}
-      {jobs.length === 0 && (
-        <Text size="xs" c="dimmed" ta="center" py="md">
-          —
+      <Group justify="space-between" p="sm" pb="xs">
+        <Text size="xs" fw={700} tt="uppercase" c="dimmed" style={{ letterSpacing: '0.03em' }}>
+          {meta.label}
         </Text>
-      )}
-    </Stack>
+        <Badge size="sm" variant="light" color={meta.color} circle>
+          {jobs.length}
+        </Badge>
+      </Group>
+
+      <Stack
+        ref={setNodeRef}
+        gap="xs"
+        p="sm"
+        pt={0}
+        style={{
+          flex: 1,
+          minHeight: 320,
+          borderRadius: 4,
+          background: isOver ? `var(--mantine-color-${meta.color}-0)` : undefined,
+          outline: isOver ? `2px dashed var(--mantine-color-${meta.color}-5)` : undefined,
+          outlineOffset: -4,
+          transition: 'background-color 100ms ease, outline-color 100ms ease',
+        }}
+      >
+        {jobs.map((job) => (
+          <JobCard key={job.id} job={job} />
+        ))}
+        {jobs.length === 0 && (
+          <Text size="xs" c="dimmed" ta="center" py="md">
+            No jobs here
+          </Text>
+        )}
+      </Stack>
+    </Paper>
   );
 }
 
@@ -80,19 +99,11 @@ export function JobsBoard({ jobs }: { jobs: JobDto[] }) {
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <Grid>
+      <Grid align="stretch">
         {COLUMNS.map((status) => {
           const columnJobs = jobs.filter((j) => j.status === status);
           return (
             <Grid.Col key={status} span={{ base: 12, xs: 6, md: 3 }}>
-              <Group justify="space-between" mb="xs">
-                <Text size="xs" fw={700} tt="uppercase" c="dimmed">
-                  {STATUS_META[status].label}
-                </Text>
-                <Text size="xs" c="dimmed">
-                  {columnJobs.length}
-                </Text>
-              </Group>
               <Column status={status} jobs={columnJobs} />
             </Grid.Col>
           );
