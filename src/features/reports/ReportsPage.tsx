@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Group, Loader, Select, Stack, Table, Tabs, Text, Title } from '@mantine/core';
+import { Button, Group, Loader, Paper, Select, Stack, Table, Tabs, Text, Title } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import type { JobStatus, ReportType } from '../../api/types';
 import { downloadReport } from '../../api/reports';
@@ -81,35 +81,37 @@ export function ReportsPage() {
       {isLoading || !report ? (
         <Loader />
       ) : (
-        <Table striped highlightOnHover>
-          <Table.Thead>
-            <Table.Tr>
-              {report.columns.map((column) => (
-                <Table.Th key={column}>{column}</Table.Th>
-              ))}
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {report.rows.map((row, rowIndex) => (
-              <Table.Tr key={rowIndex}>
-                {row.map((cell, cellIndex) => (
-                  <Table.Td key={cellIndex} className="tabular-nums">
-                    {formatters[cellIndex]?.(cell, orgSettings?.currencyCode) ?? String(cell ?? '—')}
-                  </Table.Td>
+        <Paper shadow="sm" radius="md" style={{ overflow: 'hidden' }}>
+          <Table>
+            <Table.Thead>
+              <Table.Tr>
+                {report.columns.map((column) => (
+                  <Table.Th key={column}>{column}</Table.Th>
                 ))}
               </Table.Tr>
-            ))}
-            {report.rows.length === 0 && (
-              <Table.Tr>
-                <Table.Td colSpan={report.columns.length}>
-                  <Text c="dimmed" ta="center" py="md">
-                    No data for these filters.
-                  </Text>
-                </Table.Td>
-              </Table.Tr>
-            )}
-          </Table.Tbody>
-        </Table>
+            </Table.Thead>
+            <Table.Tbody>
+              {report.rows.map((row, rowIndex) => (
+                <Table.Tr key={rowIndex}>
+                  {row.map((cell, cellIndex) => (
+                    <Table.Td key={cellIndex} className="tabular-nums">
+                      {formatters[cellIndex]?.(cell, orgSettings?.currencyCode) ?? String(cell ?? '—')}
+                    </Table.Td>
+                  ))}
+                </Table.Tr>
+              ))}
+              {report.rows.length === 0 && (
+                <Table.Tr>
+                  <Table.Td colSpan={report.columns.length}>
+                    <Text c="dimmed" ta="center" py="md">
+                      No data for these filters.
+                    </Text>
+                  </Table.Td>
+                </Table.Tr>
+              )}
+            </Table.Tbody>
+          </Table>
+        </Paper>
       )}
     </Stack>
   );

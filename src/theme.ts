@@ -130,6 +130,28 @@ export const theme = createTheme({
     Modal: Modal.extend({ defaultProps: { radius: 'md', shadow: 'xl', overlayProps: { backgroundOpacity: 0.45, blur: 2 } } }),
     Button: Button.extend({ defaultProps: { radius: 'sm' } }),
     Badge: Badge.extend({ defaultProps: { radius: 'sm' } }),
-    Table: Table.extend({ defaultProps: { verticalSpacing: 'sm', horizontalSpacing: 'md' } }),
+    // Modern table look: a tinted, uppercase header instead of a bare bold row, hairline row
+    // dividers instead of the previous zebra striping (flat rows + hover reads cleaner/more
+    // premium — closer to Linear/Notion/Stripe-style tables than a spreadsheet), and hover
+    // highlighting on by default so every table gets it without repeating the prop everywhere.
+    Table: Table.extend({
+      defaultProps: { verticalSpacing: 'sm', horizontalSpacing: 'md', highlightOnHover: true },
+      styles: {
+        thead: {
+          backgroundColor: 'var(--mantine-color-gray-0)',
+        },
+        th: {
+          fontSize: '0.68rem',
+          textTransform: 'uppercase',
+          letterSpacing: '0.04em',
+          fontWeight: 700,
+          color: 'var(--mantine-color-dimmed)',
+          borderBottom: '1px solid var(--mantine-color-gray-3)',
+        },
+        td: {
+          borderBottom: '1px solid var(--mantine-color-gray-1)',
+        },
+      },
+    }),
   },
 });

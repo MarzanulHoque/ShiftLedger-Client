@@ -87,45 +87,47 @@ export function BillsPage() {
         ]}
       />
 
-      <Table striped highlightOnHover>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>Job</Table.Th>
-            <Table.Th>Bike model</Table.Th>
-            <Table.Th>Total</Table.Th>
-            <Table.Th>Status</Table.Th>
-            <Table.Th>Paid at</Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {data?.rows.map((row) => (
-            <Table.Tr
-              key={row.billId}
-              onClick={row.jobDeleted ? undefined : () => navigate(`/jobs/${row.jobId}`)}
-              style={{ cursor: row.jobDeleted ? 'default' : 'pointer' }}
-            >
-              <Table.Td c={row.jobDeleted ? 'dimmed' : undefined}>{row.title}</Table.Td>
-              <Table.Td>{row.bikeModel}</Table.Td>
-              <Table.Td className="tabular-nums">{formatMoney(row.total, orgSettings?.currencyCode)}</Table.Td>
-              <Table.Td>
-                <Badge color={row.isPaid ? 'success' : 'gray'} variant={row.isPaid ? 'filled' : 'light'}>
-                  {row.isPaid ? 'Paid' : 'Unpaid'}
-                </Badge>
-              </Table.Td>
-              <Table.Td className="tabular-nums">{row.paidAtUtc ? formatDateTime(row.paidAtUtc) : '—'}</Table.Td>
-            </Table.Tr>
-          ))}
-          {!isLoading && data?.rows.length === 0 && (
+      <Paper shadow="sm" radius="md" style={{ overflow: 'hidden' }}>
+        <Table>
+          <Table.Thead>
             <Table.Tr>
-              <Table.Td colSpan={5}>
-                <Text c="dimmed" ta="center" py="md">
-                  No bills match this filter.
-                </Text>
-              </Table.Td>
+              <Table.Th>Job</Table.Th>
+              <Table.Th>Bike model</Table.Th>
+              <Table.Th>Total</Table.Th>
+              <Table.Th>Status</Table.Th>
+              <Table.Th>Paid at</Table.Th>
             </Table.Tr>
-          )}
-        </Table.Tbody>
-      </Table>
+          </Table.Thead>
+          <Table.Tbody>
+            {data?.rows.map((row) => (
+              <Table.Tr
+                key={row.billId}
+                onClick={row.jobDeleted ? undefined : () => navigate(`/jobs/${row.jobId}`)}
+                style={{ cursor: row.jobDeleted ? 'default' : 'pointer' }}
+              >
+                <Table.Td c={row.jobDeleted ? 'dimmed' : undefined}>{row.title}</Table.Td>
+                <Table.Td>{row.bikeModel}</Table.Td>
+                <Table.Td className="tabular-nums">{formatMoney(row.total, orgSettings?.currencyCode)}</Table.Td>
+                <Table.Td>
+                  <Badge color={row.isPaid ? 'success' : 'gray'} variant={row.isPaid ? 'filled' : 'light'}>
+                    {row.isPaid ? 'Paid' : 'Unpaid'}
+                  </Badge>
+                </Table.Td>
+                <Table.Td className="tabular-nums">{row.paidAtUtc ? formatDateTime(row.paidAtUtc) : '—'}</Table.Td>
+              </Table.Tr>
+            ))}
+            {!isLoading && data?.rows.length === 0 && (
+              <Table.Tr>
+                <Table.Td colSpan={5}>
+                  <Text c="dimmed" ta="center" py="md">
+                    No bills match this filter.
+                  </Text>
+                </Table.Td>
+              </Table.Tr>
+            )}
+          </Table.Tbody>
+        </Table>
+      </Paper>
 
       {totalPages > 1 && (
         <Group justify="center">

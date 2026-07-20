@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ActionIcon, Button, Group, Table, Text } from '@mantine/core';
+import { ActionIcon, Button, Group, Paper, Table, Text } from '@mantine/core';
 import { IconPencil, IconTrash } from '@tabler/icons-react';
 import { modals } from '@mantine/modals';
 import type { DepartmentDto } from '../../api/types';
@@ -27,40 +27,42 @@ export function DepartmentsTable() {
         <Button onClick={() => setModalState({ opened: true })}>+ New department</Button>
       </Group>
 
-      <Table striped highlightOnHover>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>Name</Table.Th>
-            <Table.Th w={100} />
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {departments?.map((department) => (
-            <Table.Tr key={department.id}>
-              <Table.Td>{department.name}</Table.Td>
-              <Table.Td>
-                <Group gap="xs" justify="flex-end">
-                  <ActionIcon variant="subtle" onClick={() => setModalState({ opened: true, department })}>
-                    <IconPencil size={16} />
-                  </ActionIcon>
-                  <ActionIcon variant="subtle" color="danger" onClick={() => confirmDelete(department)}>
-                    <IconTrash size={16} />
-                  </ActionIcon>
-                </Group>
-              </Table.Td>
-            </Table.Tr>
-          ))}
-          {!isLoading && departments?.length === 0 && (
+      <Paper shadow="sm" radius="md" style={{ overflow: 'hidden' }}>
+        <Table>
+          <Table.Thead>
             <Table.Tr>
-              <Table.Td colSpan={2}>
-                <Text c="dimmed" ta="center" py="md">
-                  No departments yet.
-                </Text>
-              </Table.Td>
+              <Table.Th>Name</Table.Th>
+              <Table.Th w={100} />
             </Table.Tr>
-          )}
-        </Table.Tbody>
-      </Table>
+          </Table.Thead>
+          <Table.Tbody>
+            {departments?.map((department) => (
+              <Table.Tr key={department.id}>
+                <Table.Td>{department.name}</Table.Td>
+                <Table.Td>
+                  <Group gap="xs" justify="flex-end">
+                    <ActionIcon variant="subtle" onClick={() => setModalState({ opened: true, department })}>
+                      <IconPencil size={16} />
+                    </ActionIcon>
+                    <ActionIcon variant="subtle" color="danger" onClick={() => confirmDelete(department)}>
+                      <IconTrash size={16} />
+                    </ActionIcon>
+                  </Group>
+                </Table.Td>
+              </Table.Tr>
+            ))}
+            {!isLoading && departments?.length === 0 && (
+              <Table.Tr>
+                <Table.Td colSpan={2}>
+                  <Text c="dimmed" ta="center" py="md">
+                    No departments yet.
+                  </Text>
+                </Table.Td>
+              </Table.Tr>
+            )}
+          </Table.Tbody>
+        </Table>
+      </Paper>
 
       <DepartmentFormModal
         opened={modalState.opened}

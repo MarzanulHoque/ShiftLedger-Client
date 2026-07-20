@@ -1,4 +1,4 @@
-import { Group, Pagination, Select, Table, Text } from '@mantine/core';
+import { Group, Pagination, Paper, Select, Table, Text } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 import type { JobStatus } from '../../api/types';
 import { formatDate } from '../../lib/date';
@@ -63,45 +63,47 @@ export function JobsList({
         />
       </Group>
 
-      <Table striped highlightOnHover>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>Title</Table.Th>
-            <Table.Th>Bike model</Table.Th>
-            <Table.Th>Status</Table.Th>
-            <Table.Th>Priority</Table.Th>
-            <Table.Th>Mechanic</Table.Th>
-            <Table.Th>Received</Table.Th>
-            <Table.Th>Due</Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {data?.items.map((job) => (
-            <Table.Tr key={job.id} onClick={() => navigate(`/jobs/${job.id}`)} style={{ cursor: 'pointer' }}>
-              <Table.Td>{job.title}</Table.Td>
-              <Table.Td>{job.bikeModel}</Table.Td>
-              <Table.Td>
-                <JobStatusBadge status={job.status} />
-              </Table.Td>
-              <Table.Td>
-                <PriorityBadge priority={job.priority} />
-              </Table.Td>
-              <Table.Td>{mechanics?.find((m) => m.id === job.assignedMechanicId)?.fullName ?? '—'}</Table.Td>
-              <Table.Td className="tabular-nums">{formatDate(job.receivedDate)}</Table.Td>
-              <Table.Td className="tabular-nums">{formatDate(job.dueDate)}</Table.Td>
-            </Table.Tr>
-          ))}
-          {!isLoading && data?.items.length === 0 && (
+      <Paper shadow="sm" radius="md" style={{ overflow: 'hidden' }}>
+        <Table>
+          <Table.Thead>
             <Table.Tr>
-              <Table.Td colSpan={7}>
-                <Text c="dimmed" ta="center" py="md">
-                  No jobs match these filters.
-                </Text>
-              </Table.Td>
+              <Table.Th>Title</Table.Th>
+              <Table.Th>Bike model</Table.Th>
+              <Table.Th>Status</Table.Th>
+              <Table.Th>Priority</Table.Th>
+              <Table.Th>Mechanic</Table.Th>
+              <Table.Th>Received</Table.Th>
+              <Table.Th>Due</Table.Th>
             </Table.Tr>
-          )}
-        </Table.Tbody>
-      </Table>
+          </Table.Thead>
+          <Table.Tbody>
+            {data?.items.map((job) => (
+              <Table.Tr key={job.id} onClick={() => navigate(`/jobs/${job.id}`)} style={{ cursor: 'pointer' }}>
+                <Table.Td>{job.title}</Table.Td>
+                <Table.Td>{job.bikeModel}</Table.Td>
+                <Table.Td>
+                  <JobStatusBadge status={job.status} />
+                </Table.Td>
+                <Table.Td>
+                  <PriorityBadge priority={job.priority} />
+                </Table.Td>
+                <Table.Td>{mechanics?.find((m) => m.id === job.assignedMechanicId)?.fullName ?? '—'}</Table.Td>
+                <Table.Td className="tabular-nums">{formatDate(job.receivedDate)}</Table.Td>
+                <Table.Td className="tabular-nums">{formatDate(job.dueDate)}</Table.Td>
+              </Table.Tr>
+            ))}
+            {!isLoading && data?.items.length === 0 && (
+              <Table.Tr>
+                <Table.Td colSpan={7}>
+                  <Text c="dimmed" ta="center" py="md">
+                    No jobs match these filters.
+                  </Text>
+                </Table.Td>
+              </Table.Tr>
+            )}
+          </Table.Tbody>
+        </Table>
+      </Paper>
 
       {totalPages > 1 && (
         <Group justify="center" mt="md">
