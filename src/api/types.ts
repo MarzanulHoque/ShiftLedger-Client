@@ -25,6 +25,7 @@ export interface AuthResult {
 
 export interface JobDto {
   id: string;
+  jobNumber: number;
   title: string;
   description: string | null;
   bikeModel: string;
@@ -61,6 +62,7 @@ export interface BillLineItemDto {
 
 export interface BillDto {
   id: string;
+  billNumber: number;
   serviceJobId: string;
   isPaid: boolean;
   paidAtUtc: string | null;
@@ -70,6 +72,7 @@ export interface BillDto {
 
 export interface BillSummaryDto {
   id: string;
+  billNumber: number;
   serviceJobId: string;
   isPaid: boolean;
   paidAtUtc: string | null;

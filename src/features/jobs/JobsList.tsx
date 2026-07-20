@@ -2,6 +2,7 @@ import { Group, Pagination, Paper, Select, Table, Text } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 import type { JobStatus } from '../../api/types';
 import { formatDate } from '../../lib/date';
+import { formatJobNumber } from '../../lib/identifiers';
 import { STATUS_META } from '../../lib/statusColors';
 import { useMechanics } from '../users/queries';
 import { useJobsList } from './queries';
@@ -67,6 +68,7 @@ export function JobsList({
         <Table>
           <Table.Thead>
             <Table.Tr>
+              <Table.Th>Job #</Table.Th>
               <Table.Th>Title</Table.Th>
               <Table.Th>Bike model</Table.Th>
               <Table.Th>Status</Table.Th>
@@ -79,6 +81,9 @@ export function JobsList({
           <Table.Tbody>
             {data?.items.map((job) => (
               <Table.Tr key={job.id} onClick={() => navigate(`/jobs/${job.id}`)} style={{ cursor: 'pointer' }}>
+                <Table.Td className="tabular-nums" ff="monospace" fz="xs" c="dimmed">
+                  {formatJobNumber(job.jobNumber)}
+                </Table.Td>
                 <Table.Td>{job.title}</Table.Td>
                 <Table.Td>{job.bikeModel}</Table.Td>
                 <Table.Td>
@@ -94,7 +99,7 @@ export function JobsList({
             ))}
             {!isLoading && data?.items.length === 0 && (
               <Table.Tr>
-                <Table.Td colSpan={7}>
+                <Table.Td colSpan={8}>
                   <Text c="dimmed" ta="center" py="md">
                     No jobs match these filters.
                   </Text>

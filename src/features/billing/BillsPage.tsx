@@ -15,6 +15,7 @@ import {
 } from '@mantine/core';
 import { IconFileInvoice, IconReceipt2, IconReceiptOff } from '@tabler/icons-react';
 import { formatDateTime } from '../../lib/date';
+import { formatBillNumber, formatJobNumber } from '../../lib/identifiers';
 import { useAdminDashboard } from '../dashboard/queries';
 import { useOrgSettings } from '../orgSettings/queries';
 import { formatMoney } from '../../lib/money';
@@ -91,6 +92,7 @@ export function BillsPage() {
         <Table>
           <Table.Thead>
             <Table.Tr>
+              <Table.Th>Invoice #</Table.Th>
               <Table.Th>Job</Table.Th>
               <Table.Th>Bike model</Table.Th>
               <Table.Th>Total</Table.Th>
@@ -105,7 +107,17 @@ export function BillsPage() {
                 onClick={row.jobDeleted ? undefined : () => navigate(`/jobs/${row.jobId}`)}
                 style={{ cursor: row.jobDeleted ? 'default' : 'pointer' }}
               >
-                <Table.Td c={row.jobDeleted ? 'dimmed' : undefined}>{row.title}</Table.Td>
+                <Table.Td className="tabular-nums" ff="monospace" fz="xs" c="dimmed">
+                  {formatBillNumber(row.billNumber)}
+                </Table.Td>
+                <Table.Td c={row.jobDeleted ? 'dimmed' : undefined}>
+                  {row.title}
+                  {!row.jobDeleted && (
+                    <Text span c="dimmed" size="xs" ml={6} ff="monospace">
+                      {formatJobNumber(row.jobNumber)}
+                    </Text>
+                  )}
+                </Table.Td>
                 <Table.Td>{row.bikeModel}</Table.Td>
                 <Table.Td className="tabular-nums">{formatMoney(row.total, orgSettings?.currencyCode)}</Table.Td>
                 <Table.Td>
@@ -118,7 +130,7 @@ export function BillsPage() {
             ))}
             {!isLoading && data?.rows.length === 0 && (
               <Table.Tr>
-                <Table.Td colSpan={5}>
+                <Table.Td colSpan={6}>
                   <Text c="dimmed" ta="center" py="md">
                     No bills match this filter.
                   </Text>

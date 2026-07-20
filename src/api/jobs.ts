@@ -17,17 +17,18 @@ export function getJob(id: string) {
   return apiClient.get<JobDto>(`/jobs/${id}`).then((r) => r.data);
 }
 
-// A Bill outlives its ServiceJob — DeleteJob soft-deletes the job unconditionally, with no check
-// for an existing bill (see ShiftLedger-API DeleteJob.cs), so any view that joins a bill back to
-// its job's title/bikeModel (all-bills index, dashboard's top-unpaid panel) must tolerate that
-// join 404ing instead of taking the whole list down over one orphaned reference.
-export async function getJobSummary(id: string): Promise<Pick<JobDto, 'title' | 'bikeModel'> & { deleted: boolean }> {
+// A job with a paid bill can never be deleted (see ShiftLedger-API DeleteJob.cs), so in practice
+// this 404 path only fires for pre-existing orphans from before that constraint existed. Kept as
+// a safety net so a join back to a job's title/bikeModel/number can't take the whole list down.
+export async function getJobSummary(
+  id: string,
+): Promise<Pick<JobDto, 'title' | 'bikeModel' | 'jobNumber'> & { deleted: boolean }> {
   try {
     const job = await getJob(id);
-    return { title: job.title, bikeModel: job.bikeModel, deleted: false };
+    return { title: job.title, bikeModel: job.bikeModel, jobNumber: job.jobNumber, deleted: false };
   } catch (error) {
     if (isAxiosError(error) && error.response?.status === 404) {
-      return { title: '(deleted job)', bikeModel: '—', deleted: true };
+      return { title: '(deleted job)', bikeModel: '—', jobNumber: 0, deleted: true };
     }
     throw error;
   }

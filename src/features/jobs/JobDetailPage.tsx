@@ -13,6 +13,7 @@ import {
 } from '@mantine/core';
 import { modals } from '@mantine/modals';
 import { formatDate } from '../../lib/date';
+import { formatJobNumber } from '../../lib/identifiers';
 import { adjacentStatuses } from '../../lib/jobStatusFlow';
 import { STATUS_META } from '../../lib/statusColors';
 import { useMechanics } from '../users/queries';
@@ -61,6 +62,9 @@ export function JobDetailPage() {
             {job.title} <Text span c="dimmed" fw={400} fz="lg">— {job.bikeModel}</Text>
           </Title>
           <Group gap="xs" mt={4}>
+            <Text size="xs" c="dimmed" ff="monospace">
+              {formatJobNumber(job.jobNumber)}
+            </Text>
             <JobStatusBadge status={job.status} />
             <PriorityBadge priority={job.priority} />
           </Group>

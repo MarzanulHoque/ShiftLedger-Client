@@ -5,6 +5,7 @@ import { modals } from '@mantine/modals';
 import { downloadInvoice } from '../../api/bills';
 import type { BillLineItemDto } from '../../api/types';
 import { formatDateTime } from '../../lib/date';
+import { formatBillNumber } from '../../lib/identifiers';
 import { formatMoney } from '../../lib/money';
 import { useOrgSettings } from '../orgSettings/queries';
 import { useJobBill } from './queries';
@@ -39,13 +40,14 @@ export function BillPanel({ jobId }: { jobId: string }) {
   }
 
   return (
-    <BillDetail jobId={jobId} billId={bill.id} lines={bill.lines} total={bill.total} isPaid={bill.isPaid} paidAtUtc={bill.paidAtUtc} money={money} lineModal={lineModal} setLineModal={setLineModal} />
+    <BillDetail jobId={jobId} billId={bill.id} billNumber={bill.billNumber} lines={bill.lines} total={bill.total} isPaid={bill.isPaid} paidAtUtc={bill.paidAtUtc} money={money} lineModal={lineModal} setLineModal={setLineModal} />
   );
 }
 
 function BillDetail({
   jobId,
   billId,
+  billNumber,
   lines,
   total,
   isPaid,
@@ -56,6 +58,7 @@ function BillDetail({
 }: {
   jobId: string;
   billId: string;
+  billNumber: number;
   lines: BillLineItemDto[];
   total: number;
   isPaid: boolean;
@@ -93,7 +96,12 @@ function BillDetail({
   return (
     <Paper withBorder p="md">
       <Group justify="space-between" mb="sm">
-        <Title order={5}>Bill</Title>
+        <Group gap={8}>
+          <Title order={5}>Bill</Title>
+          <Text size="xs" c="dimmed" ff="monospace">
+            {formatBillNumber(billNumber)}
+          </Text>
+        </Group>
         <Group gap="xs">
           <Badge color={isPaid ? 'success' : 'gray'} variant={isPaid ? 'filled' : 'light'}>
             {isPaid ? `Paid ${paidAtUtc ? formatDateTime(paidAtUtc) : ''}` : 'Unpaid'}

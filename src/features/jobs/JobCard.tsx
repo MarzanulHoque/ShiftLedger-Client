@@ -4,6 +4,7 @@ import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
 import type { JobDto } from '../../api/types';
 import { dueChip } from '../../lib/dueChip';
+import { formatJobNumber } from '../../lib/identifiers';
 import { initials } from '../../lib/initials';
 import { adjacentStatuses } from '../../lib/jobStatusFlow';
 import { useMechanics } from '../users/queries';
@@ -53,9 +54,14 @@ export function JobCard({ job }: { job: JobDto }) {
           }}
         />
       </Group>
-      <Text size="xs" c="dimmed" mb={6}>
-        {job.bikeModel}
-      </Text>
+      <Group justify="space-between" mb={6} gap={6}>
+        <Text size="xs" c="dimmed" lineClamp={1}>
+          {job.bikeModel}
+        </Text>
+        <Text size="xs" c="dimmed" ff="monospace" flex="none">
+          {formatJobNumber(job.jobNumber)}
+        </Text>
+      </Group>
       <Group justify="space-between" align="center">
         <Badge size="xs" variant="outline" color={due.overdue ? 'danger' : 'gray'}>
           {due.label}
