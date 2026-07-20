@@ -1,5 +1,5 @@
 import { useDraggable } from '@dnd-kit/core';
-import { ActionIcon, Badge, Card, Group, Text, Tooltip } from '@mantine/core';
+import { ActionIcon, Avatar, Badge, Card, Group, Text, Tooltip } from '@mantine/core';
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
 import type { JobDto } from '../../api/types';
@@ -62,20 +62,11 @@ export function JobCard({ job }: { job: JobDto }) {
         </Badge>
         {mechanic && (
           <Tooltip label={mechanic.fullName}>
-            <span
-              style={{
-                width: 20,
-                height: 20,
-                borderRadius: '50%',
-                border: '1px solid var(--mantine-color-gray-5)',
-                fontSize: 10,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              {initials(mechanic.fullName)}
-            </span>
+            <Avatar size={20} radius="xl" color="steel">
+              <Text fz={9} fw={700}>
+                {initials(mechanic.fullName)}
+              </Text>
+            </Avatar>
           </Tooltip>
         )}
       </Group>
