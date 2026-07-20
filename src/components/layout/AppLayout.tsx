@@ -49,30 +49,9 @@ export function AppLayout() {
   }
 
   return (
-    <AppShell header={{ height: 60 }} navbar={{ width: 232, breakpoint: 'sm' }} padding="lg">
+    <AppShell header={{ height: 60 }} navbar={{ width: 240, breakpoint: 'sm' }} padding="lg">
       <AppShell.Header style={{ boxShadow: 'var(--mantine-shadow-xs)', zIndex: 101 }}>
-        <Group h="100%" px="lg" justify="space-between">
-          <Group gap={8}>
-            <div
-              style={{
-                width: 26,
-                height: 26,
-                borderRadius: 7,
-                background: 'var(--mantine-color-brand-filled)',
-                color: 'var(--mantine-color-white)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 700,
-                fontSize: 13,
-              }}
-            >
-              S
-            </div>
-            <Text fw={700} fz="sm" style={{ letterSpacing: '0.01em' }}>
-              ShiftLedger
-            </Text>
-          </Group>
+        <Group h="100%" px="lg" justify="flex-end">
           <Group gap="sm">
             <NotificationBell />
             <Menu shadow="md" width={200} position="bottom-end">
@@ -97,23 +76,68 @@ export function AppLayout() {
         </Group>
       </AppShell.Header>
 
-      <AppShell.Navbar p="sm" style={{ boxShadow: 'var(--mantine-shadow-xs)' }}>
-        <Text size="xs" fw={700} tt="uppercase" c="dimmed" pl={8} mb={4} style={{ letterSpacing: '0.04em' }}>
-          Menu
-        </Text>
-        <Stack gap={2}>
-          {NAV_ITEMS.map((item) => (
-            <MantineNavLink
-              key={item.to}
-              component={Link}
-              to={item.to}
-              label={item.label}
-              leftSection={<item.icon size={17} stroke={1.75} />}
-              active={location.pathname.startsWith(item.to)}
-              fw={500}
-              styles={{ root: { borderRadius: 'var(--mantine-radius-sm)' } }}
-            />
-          ))}
+      {/* Sidebar is permanently dark navy regardless of color scheme — a deliberate brand anchor
+          (ties back to the wireframe's blueprint palette) rather than a generic light rail. */}
+      <AppShell.Navbar bg="navy.8" style={{ border: 'none' }}>
+        <Stack h="100%" gap={0}>
+          <Group h={60} px="lg" gap={8} style={{ borderBottom: '1px solid var(--mantine-color-navy-6)' }}>
+            <div
+              style={{
+                width: 26,
+                height: 26,
+                borderRadius: 7,
+                background: 'var(--mantine-color-brand-filled)',
+                color: 'var(--mantine-color-white)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 700,
+                fontSize: 13,
+                flexShrink: 0,
+              }}
+            >
+              S
+            </div>
+            <Text fw={700} fz="sm" c="white" style={{ letterSpacing: '0.01em' }}>
+              ShiftLedger
+            </Text>
+          </Group>
+
+          <Stack p="sm" gap={2}>
+            <Text
+              size="xs"
+              fw={700}
+              tt="uppercase"
+              pl={8}
+              mb={4}
+              mt={4}
+              c="navy.4"
+              style={{ letterSpacing: '0.06em' }}
+            >
+              Menu
+            </Text>
+            {NAV_ITEMS.map((item) => {
+              const isActive = location.pathname.startsWith(item.to);
+              return (
+                <MantineNavLink
+                  key={item.to}
+                  component={Link}
+                  to={item.to}
+                  label={item.label}
+                  leftSection={<item.icon size={17} stroke={1.75} />}
+                  active={isActive}
+                  variant={isActive ? 'filled' : 'subtle'}
+                  color={isActive ? 'brand' : 'navy'}
+                  fw={500}
+                  styles={{
+                    root: { borderRadius: 'var(--mantine-radius-sm)' },
+                    label: { color: isActive ? 'white' : 'var(--mantine-color-navy-2)' },
+                    section: { color: isActive ? 'white' : 'var(--mantine-color-navy-3)' },
+                  }}
+                />
+              );
+            })}
+          </Stack>
         </Stack>
       </AppShell.Navbar>
 

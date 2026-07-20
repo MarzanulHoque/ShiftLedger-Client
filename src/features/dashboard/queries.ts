@@ -10,6 +10,16 @@ export function useAdminDashboard() {
   return useQuery({ queryKey: ['dashboard', 'admin'], queryFn: () => getAdminDashboard() });
 }
 
+// Yesterday's snapshot, for "vs yesterday" trend deltas on the stat tiles — GetAdminDashboardQuery
+// already takes an arbitrary `date`, so no new endpoint is needed for this comparison.
+export function useYesterdayDashboard() {
+  const yesterday = dayjs().subtract(1, 'day').format('YYYY-MM-DD');
+  return useQuery({
+    queryKey: ['dashboard', 'admin', yesterday],
+    queryFn: () => getAdminDashboard(yesterday),
+  });
+}
+
 export interface UnpaidBillRow {
   billId: string;
   jobId: string;
@@ -59,6 +69,43 @@ export function useRevenueTrend(days = 14) {
         points.push({ date, revenue: byDate.get(date) ?? 0 });
       }
       return points;
+    },
+  });
+}
+
+export interface RecentPaymentRow {
+  billId: string;
+  jobId: string;
+  title: string;
+  bikeModel: string;
+  total: number;
+  paidAtUtc: string;
+}
+
+// A "recent activity" feed sourced from notifications would always be empty here: the backend
+// only ever notifies a job's assigned *mechanic* (JobAssigned/JobStatusChanged/BillPaid), never
+// the Admin who's looking at this dashboard. Recent payments (real paidAtUtc timestamps, already
+// available via the bills endpoint) is the closest genuinely-informative cross-job feed the
+// Admin's own data actually supports.
+export function useRecentPayments(limit = 6) {
+  return useQuery({
+    queryKey: ['dashboard', 'recent-payments', limit],
+    queryFn: async () => {
+      const paged = await getBills({ isPaid: true, page: 1, pageSize: 20 });
+      const sorted = [...paged.items]
+        .filter((b): b is typeof b & { paidAtUtc: string } => b.paidAtUtc !== null)
+        .sort((a, b) => (a.paidAtUtc < b.paidAtUtc ? 1 : -1))
+        .slice(0, limit);
+      const jobs = await Promise.all(sorted.map((b) => getJobSummary(b.serviceJobId)));
+      const rows: RecentPaymentRow[] = sorted.map((b, i) => ({
+        billId: b.id,
+        jobId: b.serviceJobId,
+        title: jobs[i].title,
+        bikeModel: jobs[i].bikeModel,
+        total: b.total,
+        paidAtUtc: b.paidAtUtc,
+      }));
+      return rows;
     },
   });
 }

@@ -32,3 +32,13 @@ export function isOverdue(dueDate: string | null | undefined): boolean {
   if (!dueDate) return false;
   return dayjs(dueDate).isBefore(dayjs(todayDateOnly()));
 }
+
+/** Short relative time for activity feeds ("5m ago", "3h ago", "2d ago"). */
+export function timeAgo(utcIso: string): string {
+  const diffMin = dayjs().diff(dayjs.utc(utcIso), 'minute');
+  if (diffMin < 1) return 'just now';
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h ago`;
+  return `${Math.floor(diffHr / 24)}d ago`;
+}
