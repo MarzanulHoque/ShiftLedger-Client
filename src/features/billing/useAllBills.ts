@@ -1,0 +1,37 @@
+import { useQuery } from '@tanstack/react-query';
+import { getBills } from '../../api/bills';
+import { getJob } from '../../api/jobs';
+
+export interface BillRow {
+  billId: string;
+  jobId: string;
+  title: string;
+  bikeModel: string;
+  total: number;
+  isPaid: boolean;
+  paidAtUtc: string | null;
+}
+
+const PAGE_SIZE = 20;
+
+export function useAllBills(isPaid: boolean | undefined, page: number) {
+  return useQuery({
+    queryKey: ['bills', 'all', isPaid, page],
+    queryFn: async () => {
+      const paged = await getBills({ isPaid, page, pageSize: PAGE_SIZE });
+      const jobs = await Promise.all(paged.items.map((b) => getJob(b.serviceJobId)));
+      const rows: BillRow[] = paged.items.map((b, i) => ({
+        billId: b.id,
+        jobId: b.serviceJobId,
+        title: jobs[i].title,
+        bikeModel: jobs[i].bikeModel,
+        total: b.total,
+        isPaid: b.isPaid,
+        paidAtUtc: b.paidAtUtc,
+      }));
+      return { rows, totalCount: paged.totalCount };
+    },
+  });
+}
+
+export { PAGE_SIZE };
