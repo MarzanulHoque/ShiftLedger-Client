@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { getBills } from '../../api/bills';
-import { getJob } from '../../api/jobs';
+import { getJobSummary } from '../../api/jobs';
 
 export interface BillRow {
   billId: string;
@@ -19,7 +19,7 @@ export function useAllBills(isPaid: boolean | undefined, page: number) {
     queryKey: ['bills', 'all', isPaid, page],
     queryFn: async () => {
       const paged = await getBills({ isPaid, page, pageSize: PAGE_SIZE });
-      const jobs = await Promise.all(paged.items.map((b) => getJob(b.serviceJobId)));
+      const jobs = await Promise.all(paged.items.map((b) => getJobSummary(b.serviceJobId)));
       const rows: BillRow[] = paged.items.map((b, i) => ({
         billId: b.id,
         jobId: b.serviceJobId,

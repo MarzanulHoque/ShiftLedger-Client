@@ -1,3 +1,4 @@
+import { isAxiosError } from 'axios';
 import { apiClient } from './client';
 import type { JobCommentDto, JobDto, JobHistoryEntryDto, JobPriority, JobStatus, PagedResult } from './types';
 
@@ -14,6 +15,22 @@ export function getJobs(params: GetJobsParams = {}) {
 
 export function getJob(id: string) {
   return apiClient.get<JobDto>(`/jobs/${id}`).then((r) => r.data);
+}
+
+// A Bill outlives its ServiceJob — DeleteJob soft-deletes the job unconditionally, with no check
+// for an existing bill (see ShiftLedger-API DeleteJob.cs), so any view that joins a bill back to
+// its job's title/bikeModel (all-bills index, dashboard's top-unpaid panel) must tolerate that
+// join 404ing instead of taking the whole list down over one orphaned reference.
+export async function getJobSummary(id: string): Promise<Pick<JobDto, 'title' | 'bikeModel'>> {
+  try {
+    const job = await getJob(id);
+    return { title: job.title, bikeModel: job.bikeModel };
+  } catch (error) {
+    if (isAxiosError(error) && error.response?.status === 404) {
+      return { title: '(deleted job)', bikeModel: '—' };
+    }
+    throw error;
+  }
 }
 
 export interface CreateJobRequest {
