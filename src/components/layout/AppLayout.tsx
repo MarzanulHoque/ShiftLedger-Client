@@ -53,17 +53,42 @@ export function AppLayout() {
   return (
     <AppShell header={{ height: 60 }} navbar={{ width: 240, breakpoint: 'sm' }} padding="lg">
       <AppShell.Header style={{ boxShadow: 'var(--mantine-shadow-xs)', zIndex: 101 }}>
-        <Group h="100%" px="lg" justify="space-between">
-          {currentSection ? (
+        <Group h="100%" pl="sm" pr="lg" justify="space-between">
+          <Group gap="sm">
             <Group gap={8}>
-              <currentSection.icon size={18} stroke={1.75} style={{ color: 'var(--mantine-color-brand-6)' }} />
-              <Text fw={600} fz="sm" c="dimmed">
-                {currentSection.label}
+              <div
+                style={{
+                  width: 26,
+                  height: 26,
+                  borderRadius: 7,
+                  background: 'var(--mantine-color-brand-filled)',
+                  color: 'var(--mantine-color-white)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 700,
+                  fontSize: 13,
+                  flexShrink: 0,
+                }}
+              >
+                S
+              </div>
+              <Text fw={700} fz="sm" style={{ letterSpacing: '0.01em' }}>
+                ShiftLedger
               </Text>
             </Group>
-          ) : (
-            <div />
-          )}
+            {currentSection && (
+              <>
+                <div style={{ width: 1, height: 20, background: 'var(--mantine-color-gray-3)' }} />
+                <Group gap={8}>
+                  <currentSection.icon size={18} stroke={1.75} style={{ color: 'var(--mantine-color-brand-6)' }} />
+                  <Text fw={600} fz="sm" c="dimmed">
+                    {currentSection.label}
+                  </Text>
+                </Group>
+              </>
+            )}
+          </Group>
           <Group gap="sm">
             <Menu shadow="md" width={200} position="bottom-end">
               <Menu.Target>
@@ -91,30 +116,7 @@ export function AppLayout() {
           (ties back to the wireframe's blueprint palette) rather than a generic light rail. */}
       <AppShell.Navbar bg="navy.8" style={{ border: 'none' }}>
         <Stack h="100%" gap={0}>
-          <Group h={60} px="sm" gap={8} align="center" style={{ borderBottom: '1px solid var(--mantine-color-navy-6)' }}>
-            <div
-              style={{
-                width: 26,
-                height: 26,
-                borderRadius: 7,
-                background: 'var(--mantine-color-brand-filled)',
-                color: 'var(--mantine-color-white)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 700,
-                fontSize: 13,
-                flexShrink: 0,
-              }}
-            >
-              S
-            </div>
-            <Text fw={700} fz="sm" c="white" style={{ letterSpacing: '0.01em' }}>
-              ShiftLedger
-            </Text>
-          </Group>
-
-          <Stack p="sm" gap={2}>
+          <Stack p="sm" gap={2} pt="md">
             <Text
               size="xs"
               fw={700}
