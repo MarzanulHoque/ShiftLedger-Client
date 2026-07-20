@@ -48,10 +48,22 @@ export function AppLayout() {
     return <MechanicPlaceholder />;
   }
 
+  const currentSection = [...NAV_ITEMS].reverse().find((item) => location.pathname.startsWith(item.to));
+
   return (
     <AppShell header={{ height: 60 }} navbar={{ width: 240, breakpoint: 'sm' }} padding="lg">
       <AppShell.Header style={{ boxShadow: 'var(--mantine-shadow-xs)', zIndex: 101 }}>
-        <Group h="100%" px="lg" justify="flex-end">
+        <Group h="100%" px="lg" justify="space-between">
+          {currentSection ? (
+            <Group gap={8}>
+              <currentSection.icon size={18} stroke={1.75} style={{ color: 'var(--mantine-color-brand-6)' }} />
+              <Text fw={600} fz="sm" c="dimmed">
+                {currentSection.label}
+              </Text>
+            </Group>
+          ) : (
+            <div />
+          )}
           <Group gap="sm">
             <NotificationBell />
             <Menu shadow="md" width={200} position="bottom-end">
