@@ -112,7 +112,6 @@ function StatTile({
   value,
   sub,
   trend,
-  sparkline,
 }: {
   icon: ComponentType<IconProps>;
   color: string;
@@ -120,10 +119,9 @@ function StatTile({
   value: string;
   sub?: string;
   trend?: ReactNode;
-  sparkline?: { date: string; revenue: number }[];
 }) {
   return (
-    <Paper p="md" shadow="sm" style={{ borderTop: `3px solid var(--mantine-color-${color}-6)`, position: 'relative', overflow: 'hidden' }}>
+    <Paper p="md" shadow="sm" style={{ borderTop: `3px solid var(--mantine-color-${color}-6)` }}>
       <Group justify="space-between" mb={8} wrap="nowrap">
         <Text size="xs" tt="uppercase" fw={600} c="dimmed" style={{ letterSpacing: '0.02em' }}>
           {label}
@@ -141,21 +139,6 @@ function StatTile({
         </Text>
       )}
       {trend}
-      {sparkline && sparkline.length > 1 && (
-        <div style={{ position: 'absolute', right: 0, bottom: 0, width: '55%', height: 34, opacity: 0.9 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={sparkline} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={CHART_COLORS.brand} stopOpacity={0.3} />
-                  <stop offset="100%" stopColor={CHART_COLORS.brand} stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <Area type="monotone" dataKey="revenue" stroke={CHART_COLORS.brand} strokeWidth={1.5} fill="url(#sparkFill)" dot={false} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      )}
     </Paper>
   );
 }
@@ -217,7 +200,6 @@ export function DashboardPage() {
   const hasOpenJobs = statusRows.some((row) => row.count > 0);
   const money = (amount: number) => formatMoney(amount, orgSettings?.currencyCode);
   const greetingName = users?.find((u) => u.id === user?.id)?.fullName ?? user?.email.split('@')[0];
-  const sparklinePoints = revenueTrend?.slice(-7);
 
   return (
     <Stack gap="md">
@@ -270,7 +252,6 @@ export function DashboardPage() {
           label="Revenue today"
           value={money(dashboard.revenueToday)}
           trend={<TrendBadge current={dashboard.revenueToday} previous={yesterday?.revenueToday} goodDirection="up" />}
-          sparkline={sparklinePoints}
         />
       </SimpleGrid>
 
