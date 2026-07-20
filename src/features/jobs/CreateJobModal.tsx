@@ -13,8 +13,8 @@ const schema = z.object({
   description: z.string().max(2000).optional(),
   priority: z.enum(['Low', 'Medium', 'High']),
   assignedMechanicId: z.string().nullable(),
-  receivedDate: z.date(),
-  dueDate: z.date().nullable(),
+  receivedDate: z.string(),
+  dueDate: z.string().nullable(),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -36,7 +36,7 @@ export function CreateJobModal({ opened, onClose }: { opened: boolean; onClose: 
       description: '',
       priority: 'Medium',
       assignedMechanicId: null,
-      receivedDate: new Date(),
+      receivedDate: dayjs().format('YYYY-MM-DD'),
       dueDate: null,
     },
   });
@@ -48,8 +48,8 @@ export function CreateJobModal({ opened, onClose }: { opened: boolean; onClose: 
       description: values.description || null,
       priority: values.priority,
       assignedMechanicId: values.assignedMechanicId,
-      receivedDate: dayjs(values.receivedDate).format('YYYY-MM-DD'),
-      dueDate: values.dueDate ? dayjs(values.dueDate).format('YYYY-MM-DD') : null,
+      receivedDate: values.receivedDate,
+      dueDate: values.dueDate,
     });
     reset();
     onClose();
@@ -96,7 +96,9 @@ export function CreateJobModal({ opened, onClose }: { opened: boolean; onClose: 
           <Controller
             control={control}
             name="receivedDate"
-            render={({ field }) => <DateInput label="Received" value={field.value} onChange={(v) => field.onChange(v ?? new Date())} />}
+            render={({ field }) => (
+              <DateInput label="Received" value={field.value} onChange={(v) => field.onChange(v ?? dayjs().format('YYYY-MM-DD'))} />
+            )}
           />
           <Controller
             control={control}

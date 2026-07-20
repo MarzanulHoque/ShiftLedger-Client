@@ -4,7 +4,6 @@ import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Button, Group, Modal, Select, Textarea, TextInput } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
-import dayjs from 'dayjs';
 import type { JobDto } from '../../api/types';
 import { useUpdateJob } from './mutations';
 
@@ -13,7 +12,7 @@ const schema = z.object({
   bikeModel: z.string().min(1, 'Bike model is required').max(128),
   description: z.string().max(2000).optional(),
   priority: z.enum(['Low', 'Medium', 'High']),
-  dueDate: z.date().nullable(),
+  dueDate: z.string().nullable(),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -33,7 +32,7 @@ export function EditJobModal({ opened, onClose, job }: { opened: boolean; onClos
       bikeModel: job.bikeModel,
       description: job.description ?? '',
       priority: job.priority,
-      dueDate: job.dueDate ? dayjs(job.dueDate).toDate() : null,
+      dueDate: job.dueDate,
     },
   });
 
@@ -43,7 +42,7 @@ export function EditJobModal({ opened, onClose, job }: { opened: boolean; onClos
       bikeModel: job.bikeModel,
       description: job.description ?? '',
       priority: job.priority,
-      dueDate: job.dueDate ? dayjs(job.dueDate).toDate() : null,
+      dueDate: job.dueDate,
     });
   }, [job, reset]);
 
@@ -54,7 +53,7 @@ export function EditJobModal({ opened, onClose, job }: { opened: boolean; onClos
       bikeModel: values.bikeModel,
       description: values.description || null,
       priority: values.priority,
-      dueDate: values.dueDate ? dayjs(values.dueDate).format('YYYY-MM-DD') : null,
+      dueDate: values.dueDate,
     });
     onClose();
   }
