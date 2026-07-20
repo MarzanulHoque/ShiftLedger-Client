@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { AppShell, Group, NavLink as MantineNavLink, Text } from '@mantine/core';
 import {
   IconDashboard,
@@ -6,7 +7,7 @@ import {
   IconTools,
   IconUsersGroup,
 } from '@tabler/icons-react';
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Link, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../auth/store';
 import { useNotificationsSocket } from '../../features/notifications/useNotificationsSocket';
 import { NotificationBell } from './NotificationBell';
@@ -26,7 +27,18 @@ export function AppLayout() {
   const location = useLocation();
   useNotificationsSocket();
 
-  if (user?.role !== 'Admin') {
+  // A valid accessToken but no decoded user means the token's claims didn't parse as expected
+  // (see lib/jwt.ts) — that's a broken session, not a legitimate non-Admin one, so force a
+  // fresh login rather than silently showing the mechanic placeholder.
+  useEffect(() => {
+    if (!user) clearSession();
+  }, [user, clearSession]);
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user.role !== 'Admin') {
     return <MechanicPlaceholder />;
   }
 
