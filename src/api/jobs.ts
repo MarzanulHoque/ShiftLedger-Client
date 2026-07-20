@@ -21,13 +21,13 @@ export function getJob(id: string) {
 // for an existing bill (see ShiftLedger-API DeleteJob.cs), so any view that joins a bill back to
 // its job's title/bikeModel (all-bills index, dashboard's top-unpaid panel) must tolerate that
 // join 404ing instead of taking the whole list down over one orphaned reference.
-export async function getJobSummary(id: string): Promise<Pick<JobDto, 'title' | 'bikeModel'>> {
+export async function getJobSummary(id: string): Promise<Pick<JobDto, 'title' | 'bikeModel'> & { deleted: boolean }> {
   try {
     const job = await getJob(id);
-    return { title: job.title, bikeModel: job.bikeModel };
+    return { title: job.title, bikeModel: job.bikeModel, deleted: false };
   } catch (error) {
     if (isAxiosError(error) && error.response?.status === 404) {
-      return { title: '(deleted job)', bikeModel: '—' };
+      return { title: '(deleted job)', bikeModel: '—', deleted: true };
     }
     throw error;
   }

@@ -10,6 +10,7 @@ export interface BillRow {
   total: number;
   isPaid: boolean;
   paidAtUtc: string | null;
+  jobDeleted: boolean;
 }
 
 const PAGE_SIZE = 20;
@@ -28,6 +29,7 @@ export function useAllBills(isPaid: boolean | undefined, page: number) {
         total: b.total,
         isPaid: b.isPaid,
         paidAtUtc: b.paidAtUtc,
+        jobDeleted: jobs[i].deleted,
       }));
       return { rows, totalCount: paged.totalCount };
     },

@@ -47,8 +47,12 @@ export function BillsPage() {
         </Table.Thead>
         <Table.Tbody>
           {data?.rows.map((row) => (
-            <Table.Tr key={row.billId} onClick={() => navigate(`/jobs/${row.jobId}`)} style={{ cursor: 'pointer' }}>
-              <Table.Td>{row.title}</Table.Td>
+            <Table.Tr
+              key={row.billId}
+              onClick={row.jobDeleted ? undefined : () => navigate(`/jobs/${row.jobId}`)}
+              style={{ cursor: row.jobDeleted ? 'default' : 'pointer' }}
+            >
+              <Table.Td c={row.jobDeleted ? 'dimmed' : undefined}>{row.title}</Table.Td>
               <Table.Td>{row.bikeModel}</Table.Td>
               <Table.Td className="tabular-nums">{formatMoney(row.total, orgSettings?.currencyCode)}</Table.Td>
               <Table.Td>

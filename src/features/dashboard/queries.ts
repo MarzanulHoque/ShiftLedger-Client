@@ -26,6 +26,7 @@ export interface UnpaidBillRow {
   title: string;
   bikeModel: string;
   total: number;
+  jobDeleted: boolean;
 }
 
 export function useTopUnpaidBills(limit = 3) {
@@ -40,6 +41,7 @@ export function useTopUnpaidBills(limit = 3) {
         title: jobs[i].title,
         bikeModel: jobs[i].bikeModel,
         total: b.total,
+        jobDeleted: jobs[i].deleted,
       }));
       return { rows, totalCount: paged.totalCount };
     },
@@ -80,6 +82,7 @@ export interface RecentPaymentRow {
   bikeModel: string;
   total: number;
   paidAtUtc: string;
+  jobDeleted: boolean;
 }
 
 // A "recent activity" feed sourced from notifications would always be empty here: the backend
@@ -104,6 +107,7 @@ export function useRecentPayments(limit = 6) {
         bikeModel: jobs[i].bikeModel,
         total: b.total,
         paidAtUtc: b.paidAtUtc,
+        jobDeleted: jobs[i].deleted,
       }));
       return rows;
     },

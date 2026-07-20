@@ -161,13 +161,20 @@ function StatTile({
 }
 
 function PaymentRow({ payment, money, onClick }: { payment: RecentPaymentRow; money: (n: number) => string; onClick: () => void }) {
+  const clickable = !payment.jobDeleted;
   return (
-    <Group gap="sm" wrap="nowrap" align="flex-start" style={{ cursor: 'pointer' }} onClick={onClick}>
+    <Group
+      gap="sm"
+      wrap="nowrap"
+      align="flex-start"
+      style={{ cursor: clickable ? 'pointer' : 'default' }}
+      onClick={clickable ? onClick : undefined}
+    >
       <ThemeIcon variant="light" color="success" size={28} radius="xl">
         <IconReceipt2 size={14} />
       </ThemeIcon>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <Text size="xs" lineClamp={1}>
+        <Text size="xs" lineClamp={1} c={payment.jobDeleted ? 'dimmed' : undefined}>
           {payment.title} <Text span c="dimmed">{payment.bikeModel}</Text>
         </Text>
         <Text size="xs" c="dimmed">
