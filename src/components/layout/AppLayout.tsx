@@ -48,46 +48,31 @@ export function AppLayout() {
     return <MechanicPlaceholder />;
   }
 
-  const currentSection = [...NAV_ITEMS].reverse().find((item) => location.pathname.startsWith(item.to));
-
   return (
     <AppShell header={{ height: 60 }} navbar={{ width: 240, breakpoint: 'sm' }} padding="lg">
       <AppShell.Header style={{ boxShadow: 'var(--mantine-shadow-xs)', zIndex: 101 }}>
         <Group h="100%" pl="sm" pr="lg" justify="space-between">
-          <Group gap="sm">
-            <Group gap={8}>
-              <div
-                style={{
-                  width: 26,
-                  height: 26,
-                  borderRadius: 7,
-                  background: 'var(--mantine-color-brand-filled)',
-                  color: 'var(--mantine-color-white)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 700,
-                  fontSize: 13,
-                  flexShrink: 0,
-                }}
-              >
-                S
-              </div>
-              <Text fw={700} fz="sm" style={{ letterSpacing: '0.01em' }}>
-                ShiftLedger
-              </Text>
-            </Group>
-            {currentSection && (
-              <>
-                <div style={{ width: 1, height: 20, background: 'var(--mantine-color-gray-3)' }} />
-                <Group gap={8}>
-                  <currentSection.icon size={18} stroke={1.75} style={{ color: 'var(--mantine-color-brand-6)' }} />
-                  <Text fw={600} fz="sm" c="dimmed">
-                    {currentSection.label}
-                  </Text>
-                </Group>
-              </>
-            )}
+          <Group gap={8}>
+            <div
+              style={{
+                width: 26,
+                height: 26,
+                borderRadius: 7,
+                background: 'var(--mantine-color-brand-filled)',
+                color: 'var(--mantine-color-white)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 700,
+                fontSize: 13,
+                flexShrink: 0,
+              }}
+            >
+              S
+            </div>
+            <Text fw={700} fz="sm" style={{ letterSpacing: '0.01em' }}>
+              ShiftLedger
+            </Text>
           </Group>
           <Group gap="sm">
             <Menu shadow="md" width={200} position="bottom-end">
