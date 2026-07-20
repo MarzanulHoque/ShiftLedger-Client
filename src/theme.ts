@@ -1,4 +1,4 @@
-import { createTheme, type MantineColorsTuple } from '@mantine/core';
+import { Badge, Button, Card, createTheme, Modal, Paper, Table, type MantineColorsTuple } from '@mantine/core';
 
 // Every ramp below is derived (HSL lightness/saturation curve, not hand-picked) from a single
 // anchor color pulled from the wireframe set, so shade[anchorIndex] reproduces that anchor's
@@ -97,16 +97,39 @@ const navy: MantineColorsTuple = [
   '#0C151F',
 ];
 
+const SANS = '-apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+
 export const theme = createTheme({
   primaryColor: 'brand',
   primaryShade: { light: 6, dark: 4 },
   autoContrast: true,
   colors: { brand, success, danger, steel, slate, gray: slate, navy, dark: navy },
-  defaultRadius: 'sm',
-  fontFamily: '-apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+  defaultRadius: 'md',
+  fontFamily: SANS,
   fontFamilyMonospace: 'ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Consolas, monospace',
   headings: {
-    fontFamily: '"Arial Narrow", "Helvetica Neue Condensed", "Segoe UI Semibold", Arial, sans-serif',
-    fontWeight: '700',
+    // Same family as the body (not a condensed display face) — one typeface, weight/size carry
+    // the hierarchy, matching how Linear/Notion/Vercel-style dashboards read as "software" rather
+    // than a printed shop sign.
+    fontFamily: SANS,
+    fontWeight: '650',
+  },
+  shadows: {
+    xs: '0 1px 2px rgba(16, 24, 32, 0.06)',
+    sm: '0 1px 3px rgba(16, 24, 32, 0.08), 0 1px 2px rgba(16, 24, 32, 0.04)',
+    md: '0 4px 12px rgba(16, 24, 32, 0.10), 0 2px 4px rgba(16, 24, 32, 0.06)',
+    lg: '0 12px 24px rgba(16, 24, 32, 0.12), 0 4px 8px rgba(16, 24, 32, 0.06)',
+    xl: '0 20px 40px rgba(16, 24, 32, 0.16), 0 8px 16px rgba(16, 24, 32, 0.08)',
+  },
+  components: {
+    // Every Paper/Card in the app (stat tiles, panels, board columns, modals) gets a soft
+    // elevation shadow instead of relying on `withBorder` alone — flat bordered boxes read as a
+    // wireframe; a hairline border + shadow together reads as an actual raised surface.
+    Paper: Paper.extend({ defaultProps: { shadow: 'xs', radius: 'md' } }),
+    Card: Card.extend({ defaultProps: { shadow: 'xs', radius: 'md', padding: 'lg' } }),
+    Modal: Modal.extend({ defaultProps: { radius: 'md', shadow: 'xl', overlayProps: { backgroundOpacity: 0.45, blur: 2 } } }),
+    Button: Button.extend({ defaultProps: { radius: 'sm' } }),
+    Badge: Badge.extend({ defaultProps: { radius: 'sm' } }),
+    Table: Table.extend({ defaultProps: { verticalSpacing: 'sm', horizontalSpacing: 'md' } }),
   },
 });

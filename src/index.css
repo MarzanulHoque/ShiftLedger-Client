@@ -14,3 +14,19 @@ body,
   font-family: var(--mantine-font-family-monospace);
   font-variant-numeric: tabular-nums;
 }
+
+/*
+ * Mantine's Paper/Card and AppShell.Header/Navbar all paint the theme's --mantine-color-body
+ * variable (white in light mode, navy-7 in dark). AppShell.Main itself paints nothing and just
+ * shows the literal <body> element through — so without this, every surface in the app is the
+ * exact same flat color and "elevation" shadows have nothing to read against. Giving the literal
+ * <body> element a slightly muted tint (independent of the --mantine-color-body variable, so it
+ * doesn't affect Paper/Card/Header/Navbar) makes the main content area a visibly different,
+ * recessed backdrop that the white/navy-7 cards sit on top of.
+ */
+[data-mantine-color-scheme='light'] body {
+  background-color: var(--mantine-color-gray-0);
+}
+[data-mantine-color-scheme='dark'] body {
+  background-color: var(--mantine-color-navy-9);
+}

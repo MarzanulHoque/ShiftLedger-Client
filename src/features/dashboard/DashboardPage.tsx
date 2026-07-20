@@ -1,5 +1,14 @@
 import { useNavigate } from 'react-router-dom';
-import { Button, Group, Loader, Paper, SimpleGrid, Stack, Text, Title } from '@mantine/core';
+import { Button, Group, Loader, Paper, SimpleGrid, Stack, Text, ThemeIcon, Title } from '@mantine/core';
+import {
+  IconCalendarEvent,
+  IconClipboardList,
+  IconCoin,
+  IconReceipt2,
+  IconReceiptOff,
+  type IconProps,
+} from '@tabler/icons-react';
+import type { ComponentType } from 'react';
 
 import dayjs from 'dayjs';
 import { useAuthStore } from '../../auth/store';
@@ -16,17 +25,34 @@ import { useAdminDashboard, useDueSoonJobs, useTopUnpaidBills } from './queries'
 // matching the wireframe ("+N delivered, out of the active view above").
 const BAR_STATUSES = ['Received', 'InProgress', 'Completed'] as const;
 
-function StatTile({ label, value, sub }: { label: string; value: string; sub?: string }) {
+function StatTile({
+  icon: Icon,
+  color,
+  label,
+  value,
+  sub,
+}: {
+  icon: ComponentType<IconProps>;
+  color: string;
+  label: string;
+  value: string;
+  sub?: string;
+}) {
   return (
-    <Paper withBorder p="sm">
-      <Text size="xl" fw={700} className="tabular-nums">
+    <Paper p="md" shadow="sm" style={{ borderTop: `3px solid var(--mantine-color-${color}-6)` }}>
+      <Group justify="space-between" mb={8} wrap="nowrap">
+        <Text size="xs" tt="uppercase" fw={600} c="dimmed" style={{ letterSpacing: '0.02em' }}>
+          {label}
+        </Text>
+        <ThemeIcon variant="light" color={color} size={30} radius="md">
+          <Icon size={16} stroke={1.75} />
+        </ThemeIcon>
+      </Group>
+      <Text fz="1.6rem" fw={700} className="tabular-nums">
         {value}
       </Text>
-      <Text size="xs" tt="uppercase" c="dimmed">
-        {label}
-      </Text>
       {sub && (
-        <Text size="xs" c="success" className="tabular-nums">
+        <Text size="xs" c="success" fw={500} className="tabular-nums">
           {sub}
         </Text>
       )}
@@ -75,15 +101,27 @@ export function DashboardPage() {
       </Group>
 
       <SimpleGrid cols={{ base: 2, sm: 3, md: 5 }}>
-        <StatTile label="Jobs received today" value={String(dashboard.jobsReceivedToday)} />
-        <StatTile label="Open jobs" value={String(openJobs)} />
         <StatTile
+          icon={IconCalendarEvent}
+          color="steel"
+          label="Jobs received today"
+          value={String(dashboard.jobsReceivedToday)}
+        />
+        <StatTile icon={IconClipboardList} color="brand" label="Open jobs" value={String(openJobs)} />
+        <StatTile
+          icon={IconReceiptOff}
+          color="danger"
           label="Unpaid bills"
           value={String(dashboard.unpaidBills)}
           sub={`${money(dashboard.unpaidTotal)} outstanding`}
         />
-        <StatTile label="Bills paid today" value={String(dashboard.billsPaidToday)} />
-        <StatTile label="Revenue today" value={money(dashboard.revenueToday)} />
+        <StatTile
+          icon={IconReceipt2}
+          color="success"
+          label="Bills paid today"
+          value={String(dashboard.billsPaidToday)}
+        />
+        <StatTile icon={IconCoin} color="brand" label="Revenue today" value={money(dashboard.revenueToday)} />
       </SimpleGrid>
 
       <SimpleGrid cols={{ base: 1, md: 3 }}>
@@ -97,7 +135,9 @@ export function DashboardPage() {
                 <Text size="xs" w={90}>
                   {STATUS_META[row.status].label}
                 </Text>
-                <div style={{ flex: 1, height: 6, background: 'var(--mantine-color-gray-2)' }}>
+                <div
+                  style={{ flex: 1, height: 8, borderRadius: 4, overflow: 'hidden', background: 'var(--mantine-color-gray-2)' }}
+                >
                   <div
                     style={{
                       height: '100%',
@@ -135,7 +175,9 @@ export function DashboardPage() {
                 <Text size="xs" w={90} lineClamp={1}>
                   {row.mechanicName}
                 </Text>
-                <div style={{ flex: 1, height: 6, background: 'var(--mantine-color-gray-2)' }}>
+                <div
+                  style={{ flex: 1, height: 8, borderRadius: 4, overflow: 'hidden', background: 'var(--mantine-color-gray-2)' }}
+                >
                   <div
                     style={{
                       height: '100%',
