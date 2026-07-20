@@ -48,6 +48,16 @@ export function useChangeJobStatus(id: string) {
   });
 }
 
+// For the board's drag-and-drop: the target job id is only known at drop time, not at
+// hook-call time, so this takes {id, newStatus} per mutate() call instead of binding id upfront.
+export function useChangeAnyJobStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, newStatus }: { id: string; newStatus: JobStatus }) => changeJobStatus(id, newStatus),
+    onSuccess: (_data, { id }) => invalidateJob(queryClient, id),
+  });
+}
+
 export function useAssignMechanic(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
