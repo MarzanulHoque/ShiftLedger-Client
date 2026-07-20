@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Button, Group, Loader, Paper, SimpleGrid, Stack, Text, ThemeIcon, Title } from '@mantine/core';
+import { Button, Grid, Group, Loader, Paper, SimpleGrid, Stack, Text, ThemeIcon, Title } from '@mantine/core';
 import {
   IconCalendarEvent,
   IconClipboardList,
@@ -9,6 +9,21 @@ import {
   type IconProps,
 } from '@tabler/icons-react';
 import type { ComponentType } from 'react';
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 
 import dayjs from 'dayjs';
 import { useAuthStore } from '../../auth/store';
@@ -17,13 +32,28 @@ import { formatMoney } from '../../lib/money';
 import { STATUS_META } from '../../lib/statusColors';
 import { useOrgSettings } from '../orgSettings/queries';
 import { useMechanics, useUsers } from '../users/queries';
-import { useAdminDashboard, useDueSoonJobs, useTopUnpaidBills } from './queries';
+import { useAdminDashboard, useDueSoonJobs, useRevenueTrend, useTopUnpaidBills } from './queries';
 
-// Bars always show these three in this order, even at zero — GetAdminDashboardQuery only
-// returns rows for statuses that actually have jobs, so a quiet day would otherwise render
-// an empty panel instead of a real (if flat) chart. Delivered is a footnote, not a bar,
+// Bars/donut always show these three in this order, even at zero — GetAdminDashboardQuery only
+// returns rows for statuses that actually have jobs, so a quiet day would otherwise render an
+// empty panel instead of a real (if flat) chart. Delivered is a footnote, not a segment,
 // matching the wireframe ("+N delivered, out of the active view above").
 const BAR_STATUSES = ['Received', 'InProgress', 'Completed'] as const;
+
+// Resolved hex values for theme.ts's brand/steel/success shade-6 — Recharts' `fill`/`stroke`
+// props are plain SVG attributes, not CSS, so a `var(--mantine-color-*)` string can't be relied
+// on to resolve there. Keep these in sync with theme.ts if that palette ever changes.
+const CHART_COLORS = {
+  received: '#667884',
+  inProgress: '#3B7CAF',
+  completed: '#4E9D5F',
+  brand: '#BF5A2C',
+};
+const STATUS_CHART_COLOR: Record<(typeof BAR_STATUSES)[number], string> = {
+  Received: CHART_COLORS.received,
+  InProgress: CHART_COLORS.inProgress,
+  Completed: CHART_COLORS.completed,
+};
 
 function StatTile({
   icon: Icon,
@@ -67,6 +97,7 @@ export function DashboardPage() {
   const { data: dashboard, isLoading } = useAdminDashboard();
   const { data: unpaidBills } = useTopUnpaidBills(3);
   const { data: dueSoon } = useDueSoonJobs(5);
+  const { data: revenueTrend } = useRevenueTrend(14);
   const { data: mechanics } = useMechanics();
   const { data: users } = useUsers();
 
@@ -75,13 +106,12 @@ export function DashboardPage() {
   const openJobs = dashboard.jobsByStatus
     .filter((s) => s.status !== 'Delivered')
     .reduce((sum, s) => sum + s.count, 0);
-  const barRows = BAR_STATUSES.map((status) => ({
+  const statusRows = BAR_STATUSES.map((status) => ({
     status,
     count: dashboard.jobsByStatus.find((s) => s.status === status)?.count ?? 0,
   }));
   const deliveredCount = dashboard.jobsByStatus.find((s) => s.status === 'Delivered')?.count ?? 0;
-  const maxStatusCount = Math.max(1, ...barRows.map((s) => s.count));
-  const maxWorkload = Math.max(1, ...dashboard.mechanicWorkload.map((w) => w.openJobs));
+  const hasOpenJobs = statusRows.some((row) => row.count > 0);
   const money = (amount: number) => formatMoney(amount, orgSettings?.currencyCode);
   const greetingName = users?.find((u) => u.id === user?.id)?.fullName ?? user?.email.split('@')[0];
 
@@ -124,82 +154,119 @@ export function DashboardPage() {
         <StatTile icon={IconCoin} color="brand" label="Revenue today" value={money(dashboard.revenueToday)} />
       </SimpleGrid>
 
-      <SimpleGrid cols={{ base: 1, md: 3 }}>
-        <Paper withBorder p="md">
-          <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="sm">
-            Jobs by status
-          </Text>
-          <Stack gap="xs">
-            {barRows.map((row) => (
-              <Group key={row.status} gap="xs" wrap="nowrap">
-                <Text size="xs" w={90}>
-                  {STATUS_META[row.status].label}
-                </Text>
-                <div
-                  style={{ flex: 1, height: 8, borderRadius: 4, overflow: 'hidden', background: 'var(--mantine-color-gray-2)' }}
-                >
-                  <div
-                    style={{
-                      height: '100%',
-                      width: `${(row.count / maxStatusCount) * 100}%`,
-                      background: 'var(--mantine-color-brand-6)',
-                    }}
-                  />
-                </div>
-                <Text size="xs" className="tabular-nums">
-                  {row.count}
-                </Text>
-              </Group>
-            ))}
-          </Stack>
-          <Text size="xs" c="dimmed" mt="sm">
-            + {deliveredCount} delivered (out of the active view above)
-          </Text>
-          <Text
-            size="xs"
-            c="dimmed"
-            style={{ cursor: 'pointer' }}
-            onClick={() => navigate('/jobs')}
-          >
-            View board →
-          </Text>
-        </Paper>
+      <Grid>
+        <Grid.Col span={{ base: 12, md: 8 }}>
+          <Paper p="md" shadow="sm" h="100%">
+            <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="sm">
+              Revenue — last 14 days
+            </Text>
+            <ResponsiveContainer width="100%" height={230}>
+              <AreaChart data={revenueTrend} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="revenueFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={CHART_COLORS.brand} stopOpacity={0.35} />
+                    <stop offset="100%" stopColor={CHART_COLORS.brand} stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--mantine-color-gray-2)" />
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={(d: string) => dayjs(d).format('MMM D')}
+                  tick={{ fontSize: 11, fill: 'var(--mantine-color-dimmed)' }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tickFormatter={(v: number) => money(v)}
+                  width={64}
+                  tick={{ fontSize: 11, fill: 'var(--mantine-color-dimmed)' }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip
+                  formatter={(value) => money(Number(value) || 0)}
+                  labelFormatter={(d) => (d ? dayjs(String(d)).format('MMM D, YYYY') : '')}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke={CHART_COLORS.brand}
+                  strokeWidth={2}
+                  fill="url(#revenueFill)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </Paper>
+        </Grid.Col>
 
-        <Paper withBorder p="md">
+        <Grid.Col span={{ base: 12, md: 4 }}>
+          <Paper p="md" shadow="sm" h="100%">
+            <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="sm">
+              Jobs by status
+            </Text>
+            {hasOpenJobs ? (
+              <ResponsiveContainer width="100%" height={180}>
+                <PieChart>
+                  <Pie
+                    data={statusRows.map((row) => ({ name: STATUS_META[row.status].label, value: row.count, status: row.status }))}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={46}
+                    outerRadius={72}
+                    paddingAngle={3}
+                  >
+                    {statusRows.map((row) => (
+                      <Cell key={row.status} fill={STATUS_CHART_COLOR[row.status]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <Text size="sm" c="dimmed" ta="center" py="xl">
+                No open jobs.
+              </Text>
+            )}
+            <Text size="xs" c="dimmed" mt="xs">
+              + {deliveredCount} delivered (out of the active view above)
+            </Text>
+            <Text size="xs" c="dimmed" style={{ cursor: 'pointer' }} onClick={() => navigate('/jobs')}>
+              View board →
+            </Text>
+          </Paper>
+        </Grid.Col>
+      </Grid>
+
+      <SimpleGrid cols={{ base: 1, md: 2 }}>
+        <Paper p="md" shadow="sm">
           <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="sm">
             Mechanic workload
           </Text>
-          <Stack gap="xs">
-            {dashboard.mechanicWorkload.map((row) => (
-              <Group key={row.mechanicId} gap="xs" wrap="nowrap">
-                <Text size="xs" w={90} lineClamp={1}>
-                  {row.mechanicName}
-                </Text>
-                <div
-                  style={{ flex: 1, height: 8, borderRadius: 4, overflow: 'hidden', background: 'var(--mantine-color-gray-2)' }}
-                >
-                  <div
-                    style={{
-                      height: '100%',
-                      width: `${(row.openJobs / maxWorkload) * 100}%`,
-                      background: 'var(--mantine-color-steel-6)',
-                    }}
-                  />
-                </div>
-                <Text size="xs" className="tabular-nums">
-                  {row.openJobs}
-                </Text>
-              </Group>
-            ))}
-            {dashboard.mechanicWorkload.length === 0 && (
-              <Text size="xs" c="dimmed">
-                No mechanics assigned yet.
-              </Text>
-            )}
-          </Stack>
+          {dashboard.mechanicWorkload.length > 0 ? (
+            <ResponsiveContainer width="100%" height={Math.max(120, dashboard.mechanicWorkload.length * 44)}>
+              <BarChart data={dashboard.mechanicWorkload} layout="vertical" margin={{ left: 0, right: 16 }}>
+                <XAxis type="number" hide />
+                <YAxis
+                  type="category"
+                  dataKey="mechanicName"
+                  width={90}
+                  tick={{ fontSize: 12 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip />
+                <Bar dataKey="openJobs" name="Open jobs" fill={CHART_COLORS.inProgress} radius={[0, 4, 4, 0]} barSize={18} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <Text size="xs" c="dimmed">
+              No mechanics assigned yet.
+            </Text>
+          )}
         </Paper>
 
-        <Paper withBorder p="md">
+        <Paper p="md" shadow="sm">
           <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="sm">
             Unpaid bills — top {unpaidBills?.rows.length ?? 0}
           </Text>
@@ -220,19 +287,13 @@ export function DashboardPage() {
               </Text>
             )}
           </Stack>
-          <Text
-            size="xs"
-            c="dimmed"
-            mt="sm"
-            style={{ cursor: 'pointer' }}
-            onClick={() => navigate('/bills')}
-          >
+          <Text size="xs" c="dimmed" mt="sm" style={{ cursor: 'pointer' }} onClick={() => navigate('/bills')}>
             View all {unpaidBills?.totalCount ?? 0} →
           </Text>
         </Paper>
       </SimpleGrid>
 
-      <Paper withBorder p="md">
+      <Paper p="md" shadow="sm">
         <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="sm">
           Due soon
         </Text>

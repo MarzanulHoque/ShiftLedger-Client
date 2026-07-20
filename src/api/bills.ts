@@ -41,3 +41,13 @@ export function deleteLineItem(billId: string, lineId: string) {
 export function setBillPaid(billId: string, isPaid: boolean) {
   return apiClient.patch(`/bills/${billId}/pay`, { isPaid });
 }
+
+export async function downloadInvoice(billId: string) {
+  const response = await apiClient.get(`/bills/${billId}/invoice`, { responseType: 'blob' });
+  const url = URL.createObjectURL(response.data as Blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `invoice-${billId.slice(0, 8)}.pdf`;
+  link.click();
+  URL.revokeObjectURL(url);
+}

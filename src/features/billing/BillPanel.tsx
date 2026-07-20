@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { ActionIcon, Badge, Button, Group, Paper, Table, Text, Title } from '@mantine/core';
-import { IconPencil, IconTrash } from '@tabler/icons-react';
+import { IconDownload, IconPencil, IconTrash } from '@tabler/icons-react';
 import { modals } from '@mantine/modals';
+import { downloadInvoice } from '../../api/bills';
 import type { BillLineItemDto } from '../../api/types';
 import { formatDateTime } from '../../lib/date';
 import { formatMoney } from '../../lib/money';
@@ -93,9 +94,20 @@ function BillDetail({
     <Paper withBorder p="md">
       <Group justify="space-between" mb="sm">
         <Title order={5}>Bill</Title>
-        <Badge color={isPaid ? 'success' : 'gray'} variant={isPaid ? 'filled' : 'light'}>
-          {isPaid ? `Paid ${paidAtUtc ? formatDateTime(paidAtUtc) : ''}` : 'Unpaid'}
-        </Badge>
+        <Group gap="xs">
+          <Badge color={isPaid ? 'success' : 'gray'} variant={isPaid ? 'filled' : 'light'}>
+            {isPaid ? `Paid ${paidAtUtc ? formatDateTime(paidAtUtc) : ''}` : 'Unpaid'}
+          </Badge>
+          <ActionIcon
+            variant="subtle"
+            size="sm"
+            onClick={() => downloadInvoice(billId)}
+            aria-label="Download invoice"
+            title="Download invoice"
+          >
+            <IconDownload size={14} />
+          </ActionIcon>
+        </Group>
       </Group>
 
       <Table>
