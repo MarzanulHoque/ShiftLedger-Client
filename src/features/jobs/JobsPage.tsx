@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Button, Group, SegmentedControl, Select, Stack, Title } from '@mantine/core';
 import type { JobStatus } from '../../api/types';
 import { useMechanics } from '../users/queries';
@@ -10,6 +11,7 @@ import { CreateJobModal } from './CreateJobModal';
 type View = 'board' | 'list';
 
 export function JobsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [view, setView] = useState<View>('board');
   const [createOpened, setCreateOpened] = useState(false);
   const [mechanicId, setMechanicId] = useState<string | null>(null);
@@ -18,6 +20,17 @@ export function JobsPage() {
 
   const { data: mechanics } = useMechanics();
   const { data: boardJobs, isLoading: boardLoading } = useJobBoard(mechanicId ?? undefined);
+
+  // Deep link from the dashboard's "+ New job" quick action (/jobs?new=1).
+  useEffect(() => {
+    if (searchParams.has('new')) {
+      setCreateOpened(true);
+      setSearchParams((params) => {
+        params.delete('new');
+        return params;
+      }, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   return (
     <Stack gap="md">

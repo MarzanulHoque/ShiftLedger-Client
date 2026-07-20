@@ -5,9 +5,16 @@ import dayjs from 'dayjs';
 import { useAuthStore } from '../../auth/store';
 import { dueChip } from '../../lib/dueChip';
 import { formatMoney } from '../../lib/money';
+import { STATUS_META } from '../../lib/statusColors';
 import { useOrgSettings } from '../orgSettings/queries';
-import { useMechanics } from '../users/queries';
+import { useMechanics, useUsers } from '../users/queries';
 import { useAdminDashboard, useDueSoonJobs, useTopUnpaidBills } from './queries';
+
+// Bars always show these three in this order, even at zero — GetAdminDashboardQuery only
+// returns rows for statuses that actually have jobs, so a quiet day would otherwise render
+// an empty panel instead of a real (if flat) chart. Delivered is a footnote, not a bar,
+// matching the wireframe ("+N delivered, out of the active view above").
+const BAR_STATUSES = ['Received', 'InProgress', 'Completed'] as const;
 
 function StatTile({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
@@ -35,28 +42,35 @@ export function DashboardPage() {
   const { data: unpaidBills } = useTopUnpaidBills(3);
   const { data: dueSoon } = useDueSoonJobs(5);
   const { data: mechanics } = useMechanics();
+  const { data: users } = useUsers();
 
   if (isLoading || !dashboard) return <Loader />;
 
   const openJobs = dashboard.jobsByStatus
     .filter((s) => s.status !== 'Delivered')
     .reduce((sum, s) => sum + s.count, 0);
-  const maxStatusCount = Math.max(1, ...dashboard.jobsByStatus.map((s) => s.count));
+  const barRows = BAR_STATUSES.map((status) => ({
+    status,
+    count: dashboard.jobsByStatus.find((s) => s.status === status)?.count ?? 0,
+  }));
+  const deliveredCount = dashboard.jobsByStatus.find((s) => s.status === 'Delivered')?.count ?? 0;
+  const maxStatusCount = Math.max(1, ...barRows.map((s) => s.count));
   const maxWorkload = Math.max(1, ...dashboard.mechanicWorkload.map((w) => w.openJobs));
   const money = (amount: number) => formatMoney(amount, orgSettings?.currencyCode);
+  const greetingName = users?.find((u) => u.id === user?.id)?.fullName ?? user?.email.split('@')[0];
 
   return (
     <Stack gap="md">
       <Title order={3}>Dashboard</Title>
       <Group justify="space-between" wrap="wrap">
         <Text size="sm" c="dimmed">
-          {dayjs().format('dddd, MMMM D')} — good morning, {user?.email.split('@')[0]}
+          {dayjs().format('dddd, MMMM D')} — good morning, {greetingName}
         </Text>
         <Group>
           <Button variant="default" onClick={() => navigate('/reports')}>
             View reports
           </Button>
-          <Button onClick={() => navigate('/jobs')}>+ New job</Button>
+          <Button onClick={() => navigate('/jobs?new=1')}>+ New job</Button>
         </Group>
       </Group>
 
@@ -78,10 +92,10 @@ export function DashboardPage() {
             Jobs by status
           </Text>
           <Stack gap="xs">
-            {dashboard.jobsByStatus.map((row) => (
+            {barRows.map((row) => (
               <Group key={row.status} gap="xs" wrap="nowrap">
                 <Text size="xs" w={90}>
-                  {row.status}
+                  {STATUS_META[row.status].label}
                 </Text>
                 <div style={{ flex: 1, height: 6, background: 'var(--mantine-color-gray-2)' }}>
                   <div
@@ -98,10 +112,12 @@ export function DashboardPage() {
               </Group>
             ))}
           </Stack>
+          <Text size="xs" c="dimmed" mt="sm">
+            + {deliveredCount} delivered (out of the active view above)
+          </Text>
           <Text
             size="xs"
             c="dimmed"
-            mt="sm"
             style={{ cursor: 'pointer' }}
             onClick={() => navigate('/jobs')}
           >
