@@ -55,6 +55,11 @@ import {
 // matching the wireframe ("+N delivered, out of the active view above").
 const BAR_STATUSES = ['Received', 'InProgress', 'Completed'] as const;
 
+// Fixed height shared by the mechanic workload / unpaid bills / recent payments row — none of the
+// three grows unbounded with its data (100 mechanics, a long unpaid list, etc.); each scrolls its
+// own content within this box instead, so the row's height never depends on how much data exists.
+const SIDE_PANEL_HEIGHT = 300;
+
 type GoodDirection = 'up' | 'down' | 'neutral';
 
 function TrendBadge({
@@ -327,13 +332,13 @@ export function DashboardPage() {
 
       <Grid>
         <Grid.Col span={{ base: 12, md: 4 }}>
-          <Paper p="md" shadow="sm" h="100%" style={{ display: 'flex', flexDirection: 'column' }}>
+          <Paper p="md" shadow="sm" h={SIDE_PANEL_HEIGHT} style={{ display: 'flex', flexDirection: 'column' }}>
             <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="sm">
               Mechanic workload
             </Text>
             {dashboard.mechanicWorkload.length > 0 ? (
-              <div style={{ flex: 1, minHeight: 120 }}>
-                <ResponsiveContainer width="100%" height="100%">
+              <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+                <ResponsiveContainer width="100%" height={Math.max(120, dashboard.mechanicWorkload.length * 40)}>
                   <BarChart data={dashboard.mechanicWorkload} layout="vertical" margin={{ top: 0, right: 28, left: 0, bottom: 0 }}>
                     <XAxis type="number" hide allowDecimals={false} />
                     <YAxis
@@ -360,27 +365,29 @@ export function DashboardPage() {
         </Grid.Col>
 
         <Grid.Col span={{ base: 12, md: 4 }}>
-          <Paper p="md" shadow="sm" h="100%">
+          <Paper p="md" shadow="sm" h={SIDE_PANEL_HEIGHT} style={{ display: 'flex', flexDirection: 'column' }}>
             <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="sm">
               Unpaid bills — top {unpaidBills?.rows.length ?? 0}
             </Text>
-            <Stack gap="xs">
-              {unpaidBills?.rows.map((row) => (
-                <Group key={row.billId} justify="space-between" wrap="nowrap">
-                  <Text size="xs" lineClamp={1}>
-                    {row.title} <Text span c="dimmed">{row.bikeModel}</Text>
+            <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+              <Stack gap="xs">
+                {unpaidBills?.rows.map((row) => (
+                  <Group key={row.billId} justify="space-between" wrap="nowrap">
+                    <Text size="xs" lineClamp={1}>
+                      {row.title} <Text span c="dimmed">{row.bikeModel}</Text>
+                    </Text>
+                    <Text size="xs" fw={700} className="tabular-nums">
+                      {money(row.total)}
+                    </Text>
+                  </Group>
+                ))}
+                {unpaidBills?.rows.length === 0 && (
+                  <Text size="xs" c="dimmed">
+                    No unpaid bills.
                   </Text>
-                  <Text size="xs" fw={700} className="tabular-nums">
-                    {money(row.total)}
-                  </Text>
-                </Group>
-              ))}
-              {unpaidBills?.rows.length === 0 && (
-                <Text size="xs" c="dimmed">
-                  No unpaid bills.
-                </Text>
-              )}
-            </Stack>
+                )}
+              </Stack>
+            </div>
             <Text size="xs" c="dimmed" mt="sm" style={{ cursor: 'pointer' }} onClick={() => navigate('/bills')}>
               View all {unpaidBills?.totalCount ?? 0} →
             </Text>
@@ -388,20 +395,22 @@ export function DashboardPage() {
         </Grid.Col>
 
         <Grid.Col span={{ base: 12, md: 4 }}>
-          <Paper p="md" shadow="sm" h="100%">
+          <Paper p="md" shadow="sm" h={SIDE_PANEL_HEIGHT} style={{ display: 'flex', flexDirection: 'column' }}>
             <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="sm">
               Recent payments
             </Text>
-            <Stack gap="sm">
-              {recentPayments?.map((payment) => (
-                <PaymentRow key={payment.billId} payment={payment} money={money} onClick={() => navigate(`/jobs/${payment.jobId}`)} />
-              ))}
-              {recentPayments?.length === 0 && (
-                <Text size="xs" c="dimmed">
-                  No payments yet.
-                </Text>
-              )}
-            </Stack>
+            <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+              <Stack gap="sm">
+                {recentPayments?.map((payment) => (
+                  <PaymentRow key={payment.billId} payment={payment} money={money} onClick={() => navigate(`/jobs/${payment.jobId}`)} />
+                ))}
+                {recentPayments?.length === 0 && (
+                  <Text size="xs" c="dimmed">
+                    No payments yet.
+                  </Text>
+                )}
+              </Stack>
+            </div>
           </Paper>
         </Grid.Col>
       </Grid>
