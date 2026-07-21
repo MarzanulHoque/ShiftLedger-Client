@@ -19,6 +19,7 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  LabelList,
   Legend,
   Pie,
   PieChart,
@@ -326,26 +327,30 @@ export function DashboardPage() {
 
       <Grid>
         <Grid.Col span={{ base: 12, md: 4 }}>
-          <Paper p="md" shadow="sm">
+          <Paper p="md" shadow="sm" h="100%" style={{ display: 'flex', flexDirection: 'column' }}>
             <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="sm">
               Mechanic workload
             </Text>
             {dashboard.mechanicWorkload.length > 0 ? (
-              <ResponsiveContainer width="100%" height={Math.max(120, dashboard.mechanicWorkload.length * 44)}>
-                <BarChart data={dashboard.mechanicWorkload} layout="vertical" margin={{ left: 0, right: 16 }}>
-                  <XAxis type="number" hide />
-                  <YAxis
-                    type="category"
-                    dataKey="mechanicName"
-                    width={90}
-                    tick={{ fontSize: 12 }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip />
-                  <Bar dataKey="openJobs" name="Open jobs" fill={CHART_COLORS.steel} radius={[0, 4, 4, 0]} barSize={18} />
-                </BarChart>
-              </ResponsiveContainer>
+              <div style={{ flex: 1, minHeight: 120 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={dashboard.mechanicWorkload} layout="vertical" margin={{ top: 0, right: 28, left: 0, bottom: 0 }}>
+                    <XAxis type="number" hide allowDecimals={false} />
+                    <YAxis
+                      type="category"
+                      dataKey="mechanicName"
+                      width={90}
+                      tick={{ fontSize: 12 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip formatter={(value) => `${value} open`} />
+                    <Bar dataKey="openJobs" name="Open jobs" fill={CHART_COLORS.steel} radius={[0, 4, 4, 0]} barSize={18}>
+                      <LabelList dataKey="openJobs" position="right" style={{ fontSize: 11, fill: 'var(--mantine-color-dimmed)' }} />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             ) : (
               <Text size="xs" c="dimmed">
                 No mechanics assigned yet.
