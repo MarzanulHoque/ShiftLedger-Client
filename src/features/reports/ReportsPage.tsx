@@ -6,6 +6,7 @@ import { downloadReport } from '../../api/reports';
 import { useOrgSettings } from '../orgSettings/queries';
 import { useMechanics } from '../users/queries';
 import { STATUS_META } from '../../lib/statusColors';
+import { ReportChart } from './ReportChart';
 import { useReport } from './queries';
 import { REPORT_FORMATTERS, REPORT_TYPES } from './reportFormatters';
 
@@ -81,37 +82,40 @@ export function ReportsPage() {
       {isLoading || !report ? (
         <Loader />
       ) : (
-        <Paper shadow="sm" radius="md" style={{ overflow: 'hidden' }}>
-          <Table>
-            <Table.Thead>
-              <Table.Tr>
-                {report.columns.map((column) => (
-                  <Table.Th key={column}>{column}</Table.Th>
-                ))}
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {report.rows.map((row, rowIndex) => (
-                <Table.Tr key={rowIndex}>
-                  {row.map((cell, cellIndex) => (
-                    <Table.Td key={cellIndex} className="tabular-nums">
-                      {formatters[cellIndex]?.(cell, orgSettings?.currencyCode) ?? String(cell ?? '—')}
-                    </Table.Td>
+        <>
+          <ReportChart type={type} report={report} currencyCode={orgSettings?.currencyCode} />
+          <Paper shadow="sm" radius="md" style={{ overflow: 'hidden' }}>
+            <Table>
+              <Table.Thead>
+                <Table.Tr>
+                  {report.columns.map((column) => (
+                    <Table.Th key={column}>{column}</Table.Th>
                   ))}
                 </Table.Tr>
-              ))}
-              {report.rows.length === 0 && (
-                <Table.Tr>
-                  <Table.Td colSpan={report.columns.length}>
-                    <Text c="dimmed" ta="center" py="md">
-                      No data for these filters.
-                    </Text>
-                  </Table.Td>
-                </Table.Tr>
-              )}
-            </Table.Tbody>
-          </Table>
-        </Paper>
+              </Table.Thead>
+              <Table.Tbody>
+                {report.rows.map((row, rowIndex) => (
+                  <Table.Tr key={rowIndex}>
+                    {row.map((cell, cellIndex) => (
+                      <Table.Td key={cellIndex} className="tabular-nums">
+                        {formatters[cellIndex]?.(cell, orgSettings?.currencyCode) ?? String(cell ?? '—')}
+                      </Table.Td>
+                    ))}
+                  </Table.Tr>
+                ))}
+                {report.rows.length === 0 && (
+                  <Table.Tr>
+                    <Table.Td colSpan={report.columns.length}>
+                      <Text c="dimmed" ta="center" py="md">
+                        No data for these filters.
+                      </Text>
+                    </Table.Td>
+                  </Table.Tr>
+                )}
+              </Table.Tbody>
+            </Table>
+          </Paper>
+        </>
       )}
     </Stack>
   );

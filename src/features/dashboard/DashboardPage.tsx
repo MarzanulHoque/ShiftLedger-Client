@@ -30,6 +30,7 @@ import {
 
 import dayjs from 'dayjs';
 import { useAuthStore } from '../../auth/store';
+import { CHART_COLORS, STATUS_CHART_COLOR } from '../../lib/chartColors';
 import { dueChip } from '../../lib/dueChip';
 import { timeAgo } from '../../lib/date';
 import { initials } from '../../lib/initials';
@@ -52,22 +53,6 @@ import {
 // empty panel instead of a real (if flat) chart. Delivered is a footnote, not a segment,
 // matching the wireframe ("+N delivered, out of the active view above").
 const BAR_STATUSES = ['Received', 'InProgress', 'Completed'] as const;
-
-// Resolved hex values for theme.ts's brand/steel/success shade-6 — Recharts' `fill`/`stroke`
-// props are plain SVG attributes, not CSS, so a `var(--mantine-color-*)` string can't be relied
-// on to resolve there. Keep these in sync with theme.ts if that palette ever changes.
-const CHART_COLORS = {
-  received: '#667884',
-  inProgress: '#3B7CAF',
-  completed: '#4E9D5F',
-  brand: '#BF5A2C',
-  danger: '#B03A3A',
-};
-const STATUS_CHART_COLOR: Record<(typeof BAR_STATUSES)[number], string> = {
-  Received: CHART_COLORS.received,
-  InProgress: CHART_COLORS.inProgress,
-  Completed: CHART_COLORS.completed,
-};
 
 type GoodDirection = 'up' | 'down' | 'neutral';
 
@@ -358,7 +343,7 @@ export function DashboardPage() {
                     tickLine={false}
                   />
                   <Tooltip />
-                  <Bar dataKey="openJobs" name="Open jobs" fill={CHART_COLORS.inProgress} radius={[0, 4, 4, 0]} barSize={18} />
+                  <Bar dataKey="openJobs" name="Open jobs" fill={CHART_COLORS.steel} radius={[0, 4, 4, 0]} barSize={18} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
