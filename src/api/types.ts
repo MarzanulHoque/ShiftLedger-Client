@@ -75,9 +75,21 @@ export interface BillSummaryDto {
   id: string;
   billNumber: number;
   serviceJobId: string;
+  departmentId: string;
   isPaid: boolean;
   paidAtUtc: string | null;
   total: number;
+}
+
+export interface DepartmentBillingSummaryDto {
+  departmentId: string;
+  departmentName: string;
+  totalCount: number;
+  unpaidCount: number;
+  unpaidTotal: number;
+  paidCount: number;
+  paidTotal: number;
+  grandTotal: number;
 }
 
 export interface StatusCountDto {

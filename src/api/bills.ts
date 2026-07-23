@@ -1,14 +1,19 @@
 import { apiClient } from './client';
-import type { BillDto, BillSummaryDto, LineItemType, PagedResult } from './types';
+import type { BillDto, BillSummaryDto, DepartmentBillingSummaryDto, LineItemType, PagedResult } from './types';
 
 export interface GetBillsParams {
   isPaid?: boolean;
+  departmentId?: string;
   page?: number;
   pageSize?: number;
 }
 
 export function getBills(params: GetBillsParams = {}) {
   return apiClient.get<PagedResult<BillSummaryDto>>('/bills', { params }).then((r) => r.data);
+}
+
+export function getBillingSummary() {
+  return apiClient.get<DepartmentBillingSummaryDto[]>('/bills/department-summary').then((r) => r.data);
 }
 
 export function getJobBill(jobId: string) {
