@@ -34,7 +34,7 @@ export function AppLayout() {
   const currentUserName = users?.find((u) => u.id === user?.id)?.fullName;
 
   // A valid accessToken but no decoded user means the token's claims didn't parse as expected
-  // (see lib/jwt.ts) — that's a broken session, not a legitimate non-Admin one, so force a
+  // (see lib/jwt.ts) — that's a broken session, not a legitimate mechanic one, so force a
   // fresh login rather than silently showing the mechanic placeholder.
   useEffect(() => {
     if (!user) clearSession();
@@ -44,7 +44,7 @@ export function AppLayout() {
     return <Navigate to="/login" replace />;
   }
 
-  if (user.role !== 'Admin') {
+  if (user.role === 'Employee') {
     return <MechanicPlaceholder />;
   }
 

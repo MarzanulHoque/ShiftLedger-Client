@@ -5,7 +5,7 @@ export interface PagedResult<T> {
   totalCount: number;
 }
 
-export type Role = 'Admin' | 'Employee';
+export type Role = 'SuperAdmin' | 'DepartmentAdmin' | 'Employee';
 
 export type JobStatus = 'Received' | 'InProgress' | 'Completed' | 'Delivered';
 
@@ -26,6 +26,7 @@ export interface AuthResult {
 export interface JobDto {
   id: string;
   jobNumber: number;
+  departmentId: string;
   title: string;
   description: string | null;
   bikeModel: string;

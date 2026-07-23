@@ -4,13 +4,14 @@ import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Button, Group, Modal, Select, Switch, TextInput } from '@mantine/core';
 import type { UserDto } from '../../api/types';
+import { useAuthStore } from '../../auth/store';
 import { useDepartments } from '../departments/queries';
 import { useUpdateUser } from './mutations';
 
 const schema = z.object({
   fullName: z.string().min(1, 'Full name is required').max(200),
-  role: z.enum(['Admin', 'Employee']),
-  departmentId: z.string().nullable(),
+  role: z.enum(['DepartmentAdmin', 'Employee']),
+  departmentId: z.string().min(1, 'Department is required'),
   isActive: z.boolean(),
 });
 type FormValues = z.infer<typeof schema>;
@@ -24,6 +25,8 @@ export function EditUserModal({
   onClose: () => void;
   user: UserDto;
 }) {
+  const currentUser = useAuthStore((s) => s.user);
+  const isSuperAdmin = currentUser?.role === 'SuperAdmin';
   const { data: departments } = useDepartments();
   const updateUser = useUpdateUser();
 
@@ -37,14 +40,19 @@ export function EditUserModal({
     resolver: zodResolver(schema),
     defaultValues: {
       fullName: user.fullName,
-      role: user.role,
-      departmentId: user.departmentId,
+      role: user.role === 'SuperAdmin' ? 'DepartmentAdmin' : user.role,
+      departmentId: user.departmentId ?? '',
       isActive: user.isActive,
     },
   });
 
   useEffect(() => {
-    reset({ fullName: user.fullName, role: user.role, departmentId: user.departmentId, isActive: user.isActive });
+    reset({
+      fullName: user.fullName,
+      role: user.role === 'SuperAdmin' ? 'DepartmentAdmin' : user.role,
+      departmentId: user.departmentId ?? '',
+      isActive: user.isActive,
+    });
   }, [user, reset]);
 
   async function onSubmit(values: FormValues) {
@@ -65,12 +73,13 @@ export function EditUserModal({
               label="Role"
               data={[
                 { value: 'Employee', label: 'Employee (Mechanic)' },
-                { value: 'Admin', label: 'Admin' },
+                { value: 'DepartmentAdmin', label: 'Department Admin' },
               ]}
               value={field.value}
               onChange={(value) => field.onChange(value ?? 'Employee')}
               mb="sm"
               allowDeselect={false}
+              disabled={!isSuperAdmin}
             />
           )}
         />
@@ -80,12 +89,14 @@ export function EditUserModal({
           render={({ field }) => (
             <Select
               label="Department"
-              placeholder="None"
-              clearable
+              placeholder="Select a department"
+              error={errors.departmentId?.message}
               data={departments?.map((d) => ({ value: d.id, label: d.name })) ?? []}
               value={field.value}
-              onChange={(value) => field.onChange(value)}
+              onChange={(value) => field.onChange(value ?? '')}
               mb="sm"
+              allowDeselect={false}
+              disabled={!isSuperAdmin}
             />
           )}
         />

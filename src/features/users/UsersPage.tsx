@@ -43,7 +43,7 @@ export function UsersPage() {
   const { data: users } = useUsers();
   const { data: departments } = useDepartments();
 
-  const adminCount = users?.filter((u) => u.role === 'Admin').length ?? 0;
+  const adminCount = users?.filter((u) => u.role !== 'Employee').length ?? 0;
   const mechanicCount = users?.filter((u) => u.role === 'Employee').length ?? 0;
   const activeCount = users?.filter((u) => u.isActive).length ?? 0;
 

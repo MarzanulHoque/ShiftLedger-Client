@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Button, Group, Modal, PasswordInput, Select, TextInput } from '@mantine/core';
+import { useAuthStore } from '../../auth/store';
 import { useDepartments } from '../departments/queries';
 import { useCreateUser } from './mutations';
 
@@ -9,12 +10,14 @@ const schema = z.object({
   fullName: z.string().min(1, 'Full name is required').max(200),
   email: z.string().email('Enter a valid email'),
   password: z.string().min(8, 'At least 8 characters'),
-  role: z.enum(['Admin', 'Employee']),
-  departmentId: z.string().nullable(),
+  role: z.enum(['DepartmentAdmin', 'Employee']),
+  departmentId: z.string().min(1, 'Department is required'),
 });
 type FormValues = z.infer<typeof schema>;
 
 export function CreateUserModal({ opened, onClose }: { opened: boolean; onClose: () => void }) {
+  const currentUser = useAuthStore((s) => s.user);
+  const isSuperAdmin = currentUser?.role === 'SuperAdmin';
   const { data: departments } = useDepartments();
   const createUser = useCreateUser();
 
@@ -26,7 +29,14 @@ export function CreateUserModal({ opened, onClose }: { opened: boolean; onClose:
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { fullName: '', email: '', password: '', role: 'Employee', departmentId: null },
+    // Rule RB5: a DepartmentAdmin may only provision Employees into their own department.
+    defaultValues: {
+      fullName: '',
+      email: '',
+      password: '',
+      role: 'Employee',
+      departmentId: isSuperAdmin ? '' : (currentUser?.departmentId ?? ''),
+    },
   });
 
   async function onSubmit(values: FormValues) {
@@ -49,12 +59,13 @@ export function CreateUserModal({ opened, onClose }: { opened: boolean; onClose:
               label="Role"
               data={[
                 { value: 'Employee', label: 'Employee (Mechanic)' },
-                { value: 'Admin', label: 'Admin' },
+                { value: 'DepartmentAdmin', label: 'Department Admin' },
               ]}
               value={field.value}
               onChange={(value) => field.onChange(value ?? 'Employee')}
               mb="sm"
               allowDeselect={false}
+              disabled={!isSuperAdmin}
             />
           )}
         />
@@ -64,12 +75,14 @@ export function CreateUserModal({ opened, onClose }: { opened: boolean; onClose:
           render={({ field }) => (
             <Select
               label="Department"
-              placeholder="None"
-              clearable
+              placeholder="Select a department"
+              error={errors.departmentId?.message}
               data={departments?.map((d) => ({ value: d.id, label: d.name })) ?? []}
               value={field.value}
-              onChange={(value) => field.onChange(value)}
+              onChange={(value) => field.onChange(value ?? '')}
               mb="sm"
+              allowDeselect={false}
+              disabled={!isSuperAdmin}
             />
           )}
         />

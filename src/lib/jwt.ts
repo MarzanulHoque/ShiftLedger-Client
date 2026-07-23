@@ -3,10 +3,15 @@
 // was wrong (xmlsoap.org/2005/05/...), which meant this claim never matched anything.
 const ROLE_CLAIM = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role';
 
+// Plain claim type (not a ClaimTypes.* URI) — see JwtTokenService.CreateAccessToken. Absent for
+// SuperAdmin (org-wide, no department).
+const DEPARTMENT_CLAIM = 'dept';
+
 export interface DecodedAccessToken {
   id: string;
   email: string;
-  role: 'Admin' | 'Employee';
+  role: 'SuperAdmin' | 'DepartmentAdmin' | 'Employee';
+  departmentId: string | null;
 }
 
 // JWT segments are base64url with the padding stripped (RFC 7515) — atob() can throw on an
@@ -25,11 +30,15 @@ export function decodeAccessToken(token: string): DecodedAccessToken | null {
     const payload = token.split('.')[1];
     const json = JSON.parse(base64UrlDecode(payload));
     const role = json[ROLE_CLAIM];
-    if ((role !== 'Admin' && role !== 'Employee') || typeof json.sub !== 'string') {
+    if (
+      (role !== 'SuperAdmin' && role !== 'DepartmentAdmin' && role !== 'Employee') ||
+      typeof json.sub !== 'string'
+    ) {
       console.error('Unexpected access token claims shape', json);
       return null;
     }
-    return { id: json.sub, email: json.email as string, role };
+    const departmentId = typeof json[DEPARTMENT_CLAIM] === 'string' ? (json[DEPARTMENT_CLAIM] as string) : null;
+    return { id: json.sub, email: json.email as string, role, departmentId };
   } catch (error) {
     console.error('Failed to decode access token', error);
     return null;
