@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Avatar, Button, Grid, Group, Loader, Paper, Progress, SimpleGrid, Stack, Table, Text, ThemeIcon, Title } from '@mantine/core';
+import { Avatar, Button, Grid, Group, Loader, Paper, SimpleGrid, Stack, Table, Text, ThemeIcon, Title } from '@mantine/core';
 import {
   IconActivity,
   IconArrowDownRight,
@@ -316,34 +316,31 @@ export function DashboardPage() {
       <Paper p="md" shadow="sm">
         <PanelHeading>Mechanic workload</PanelHeading>
         {dashboard.mechanicWorkload.length > 0 ? (
-          <Stack gap="sm">
+          <SimpleGrid cols={{ base: 2, sm: 3, md: 4, lg: 5 }} spacing="sm">
             {dashboard.mechanicWorkload
               .slice()
               .sort((a, b) => b.openJobs - a.openJobs)
-              .map((mechanic) => {
-                const maxJobs = Math.max(...dashboard.mechanicWorkload.map((m) => m.openJobs), 1);
-                return (
-                  <Group key={mechanic.mechanicId} gap="sm" wrap="nowrap">
-                    <Avatar size={30} radius="xl" color="steel">
-                      <Text fz={11} fw={700}>
+              .map((mechanic) => (
+                <Paper key={mechanic.mechanicId} p="sm" withBorder radius="md" style={{ borderTop: '3px solid var(--mantine-color-steel-6)' }}>
+                  <Group gap={8} wrap="nowrap" mb={6}>
+                    <Avatar size={24} radius="xl" color="steel">
+                      <Text fz={10} fw={700}>
                         {initials(mechanic.mechanicName)}
                       </Text>
                     </Avatar>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <Group justify="space-between" mb={4} wrap="nowrap">
-                        <Text size="sm" fw={500} lineClamp={1}>
-                          {mechanic.mechanicName}
-                        </Text>
-                        <Text size="sm" fw={700} className="tabular-nums">
-                          {mechanic.openJobs} open
-                        </Text>
-                      </Group>
-                      <Progress value={(mechanic.openJobs / maxJobs) * 100} color="steel" size="md" radius="xl" />
-                    </div>
+                    <Text size="sm" fw={500} lineClamp={1}>
+                      {mechanic.mechanicName}
+                    </Text>
                   </Group>
-                );
-              })}
-          </Stack>
+                  <Text fz="1.4rem" fw={700} className="tabular-nums">
+                    {mechanic.openJobs}
+                  </Text>
+                  <Text size="xs" c="dimmed">
+                    open jobs
+                  </Text>
+                </Paper>
+              ))}
+          </SimpleGrid>
         ) : (
           <Text size="sm" c="dimmed">
             No mechanics assigned yet.
