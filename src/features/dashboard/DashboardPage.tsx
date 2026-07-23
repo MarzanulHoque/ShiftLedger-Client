@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Avatar, Button, Grid, Group, Loader, Paper, SimpleGrid, Stack, Text, ThemeIcon, Title, Tooltip as MantineTooltip } from '@mantine/core';
+import { Avatar, Button, Grid, Group, Loader, Paper, Progress, SimpleGrid, Stack, Table, Text, ThemeIcon, Title } from '@mantine/core';
 import {
   IconActivity,
   IconArrowDownRight,
@@ -21,7 +21,6 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  LabelList,
   Legend,
   Pie,
   PieChart,
@@ -47,7 +46,6 @@ import {
   useDashboardComparison,
   useDueSoonJobs,
   useRecentPayments,
-  type RecentPaymentRow,
   useRevenueTrend,
   useTopUnpaidBills,
   useYesterdayDashboard,
@@ -59,10 +57,15 @@ import {
 // matching the wireframe ("+N delivered, out of the active view above").
 const BAR_STATUSES = ['Received', 'InProgress', 'Completed'] as const;
 
-// Fixed height shared by the mechanic workload / unpaid bills / recent payments row — none of the
-// three grows unbounded with its data (100 mechanics, a long unpaid list, etc.); each scrolls its
-// own content within this box instead, so the row's height never depends on how much data exists.
-const SIDE_PANEL_HEIGHT = 300;
+// Section header used above every panel — one size/weight so the eye learns a single landmark
+// pattern instead of re-parsing each panel's hierarchy from scratch.
+function PanelHeading({ children }: { children: ReactNode }) {
+  return (
+    <Text size="sm" fw={700} tt="uppercase" c="dimmed" mb="sm" style={{ letterSpacing: '0.03em' }}>
+      {children}
+    </Text>
+  );
+}
 
 type GoodDirection = 'up' | 'down' | 'neutral';
 
@@ -135,34 +138,6 @@ function StatTile({
       )}
       {trend}
     </Paper>
-  );
-}
-
-function PaymentRow({ payment, money, onClick }: { payment: RecentPaymentRow; money: (n: number) => string; onClick: () => void }) {
-  const clickable = !payment.jobDeleted;
-  return (
-    <Group
-      gap="sm"
-      wrap="nowrap"
-      align="flex-start"
-      style={{ cursor: clickable ? 'pointer' : 'default' }}
-      onClick={clickable ? onClick : undefined}
-    >
-      <ThemeIcon variant="light" color="success" size={28} radius="xl">
-        <IconReceipt2 size={14} />
-      </ThemeIcon>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <Text size="xs" lineClamp={1} c={payment.jobDeleted ? 'dimmed' : undefined}>
-          {payment.title} <Text span c="dimmed">{payment.bikeModel}</Text>
-        </Text>
-        <Text size="xs" c="dimmed">
-          {timeAgo(payment.paidAtUtc)}
-        </Text>
-      </div>
-      <Text size="xs" fw={700} c="success" className="tabular-nums">
-        {money(payment.total)}
-      </Text>
-    </Group>
   );
 }
 
@@ -261,9 +236,7 @@ export function DashboardPage() {
       <Grid>
         <Grid.Col span={{ base: 12, md: 8 }}>
           <Paper p="md" shadow="sm" h="100%">
-            <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="sm">
-              Revenue — last 14 days
-            </Text>
+            <PanelHeading>Revenue — last 14 days</PanelHeading>
             <ResponsiveContainer width="100%" height={230}>
               <AreaChart data={revenueTrend} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
                 <defs>
@@ -276,14 +249,14 @@ export function DashboardPage() {
                 <XAxis
                   dataKey="date"
                   tickFormatter={(d: string) => dayjs(d).format('MMM D')}
-                  tick={{ fontSize: 11, fill: 'var(--mantine-color-dimmed)' }}
+                  tick={{ fontSize: 12, fill: 'var(--mantine-color-dimmed)' }}
                   axisLine={false}
                   tickLine={false}
                 />
                 <YAxis
                   tickFormatter={(v: number) => money(v)}
                   width={64}
-                  tick={{ fontSize: 11, fill: 'var(--mantine-color-dimmed)' }}
+                  tick={{ fontSize: 12, fill: 'var(--mantine-color-dimmed)' }}
                   axisLine={false}
                   tickLine={false}
                 />
@@ -305,9 +278,7 @@ export function DashboardPage() {
 
         <Grid.Col span={{ base: 12, md: 4 }}>
           <Paper p="md" shadow="sm" h="100%">
-            <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="sm">
-              Jobs by status
-            </Text>
+            <PanelHeading>Jobs by status</PanelHeading>
             {hasOpenJobs ? (
               <ResponsiveContainer width="100%" height={180}>
                 <PieChart>
@@ -335,137 +306,49 @@ export function DashboardPage() {
             <Text size="xs" c="dimmed" mt="xs">
               + {deliveredCount} delivered (out of the active view above)
             </Text>
-            <Text size="xs" c="dimmed" style={{ cursor: 'pointer' }} onClick={() => navigate('/jobs')}>
+            <Text size="sm" fw={600} c="brand" style={{ cursor: 'pointer' }} onClick={() => navigate('/jobs')}>
               View board →
             </Text>
           </Paper>
         </Grid.Col>
       </Grid>
 
-      <Grid>
-        <Grid.Col span={{ base: 12, md: 4 }}>
-          <Paper p="md" shadow="sm" h={SIDE_PANEL_HEIGHT} style={{ display: 'flex', flexDirection: 'column' }}>
-            <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="sm">
-              Mechanic workload
-            </Text>
-            {dashboard.mechanicWorkload.length > 0 ? (
-              <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
-                <ResponsiveContainer width="100%" height={Math.max(120, dashboard.mechanicWorkload.length * 40)}>
-                  <BarChart data={dashboard.mechanicWorkload} layout="vertical" margin={{ top: 0, right: 28, left: 0, bottom: 0 }}>
-                    <XAxis type="number" hide allowDecimals={false} />
-                    <YAxis
-                      type="category"
-                      dataKey="mechanicName"
-                      width={90}
-                      tick={{ fontSize: 12 }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <Tooltip formatter={(value) => `${value} open`} />
-                    <Bar dataKey="openJobs" name="Open jobs" fill={CHART_COLORS.steel} radius={[0, 4, 4, 0]} barSize={18}>
-                      <LabelList dataKey="openJobs" position="right" style={{ fontSize: 11, fill: 'var(--mantine-color-dimmed)' }} />
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            ) : (
-              <Text size="xs" c="dimmed">
-                No mechanics assigned yet.
-              </Text>
-            )}
-          </Paper>
-        </Grid.Col>
-
-        <Grid.Col span={{ base: 12, md: 4 }}>
-          <Paper p="md" shadow="sm" h={SIDE_PANEL_HEIGHT} style={{ display: 'flex', flexDirection: 'column' }}>
-            <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="sm">
-              Unpaid bills — top {unpaidBills?.rows.length ?? 0}
-            </Text>
-            <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
-              <Stack gap="xs">
-                {unpaidBills?.rows.map((row) => (
-                  <Group key={row.billId} justify="space-between" wrap="nowrap">
-                    <Text size="xs" lineClamp={1}>
-                      {row.title} <Text span c="dimmed">{row.bikeModel}</Text>
-                    </Text>
-                    <Text size="xs" fw={700} className="tabular-nums">
-                      {money(row.total)}
-                    </Text>
-                  </Group>
-                ))}
-                {unpaidBills?.rows.length === 0 && (
-                  <Text size="xs" c="dimmed">
-                    No unpaid bills.
-                  </Text>
-                )}
-              </Stack>
-            </div>
-            <Text size="xs" c="dimmed" mt="sm" style={{ cursor: 'pointer' }} onClick={() => navigate('/bills')}>
-              View all {unpaidBills?.totalCount ?? 0} →
-            </Text>
-          </Paper>
-        </Grid.Col>
-
-        <Grid.Col span={{ base: 12, md: 4 }}>
-          <Paper p="md" shadow="sm" h={SIDE_PANEL_HEIGHT} style={{ display: 'flex', flexDirection: 'column' }}>
-            <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="sm">
-              Recent payments
-            </Text>
-            <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
-              <Stack gap="sm">
-                {recentPayments?.map((payment) => (
-                  <PaymentRow key={payment.billId} payment={payment} money={money} onClick={() => navigate(`/jobs/${payment.jobId}`)} />
-                ))}
-                {recentPayments?.length === 0 && (
-                  <Text size="xs" c="dimmed">
-                    No payments yet.
-                  </Text>
-                )}
-              </Stack>
-            </div>
-          </Paper>
-        </Grid.Col>
-      </Grid>
-
       <Paper p="md" shadow="sm">
-        <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="sm">
-          Due soon
-        </Text>
-        <Stack gap="xs">
-          {dueSoon?.map((job) => {
-            const chip = dueChip(job.dueDate);
-            const mechanic = mechanics?.find((m) => m.id === job.assignedMechanicId);
-            return (
-              <Group key={job.id} justify="space-between" wrap="nowrap" style={{ cursor: 'pointer' }} onClick={() => navigate(`/jobs/${job.id}`)}>
-                <Group gap="xs" wrap="nowrap">
-                  {mechanic && (
-                    <MantineTooltip label={mechanic.fullName}>
-                      <Avatar size={20} radius="xl" color="steel">
-                        <Text fz={9} fw={700}>
-                          {initials(mechanic.fullName)}
+        <PanelHeading>Mechanic workload</PanelHeading>
+        {dashboard.mechanicWorkload.length > 0 ? (
+          <Stack gap="sm">
+            {dashboard.mechanicWorkload
+              .slice()
+              .sort((a, b) => b.openJobs - a.openJobs)
+              .map((mechanic) => {
+                const maxJobs = Math.max(...dashboard.mechanicWorkload.map((m) => m.openJobs), 1);
+                return (
+                  <Group key={mechanic.mechanicId} gap="sm" wrap="nowrap">
+                    <Avatar size={30} radius="xl" color="steel">
+                      <Text fz={11} fw={700}>
+                        {initials(mechanic.mechanicName)}
+                      </Text>
+                    </Avatar>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <Group justify="space-between" mb={4} wrap="nowrap">
+                        <Text size="sm" fw={500} lineClamp={1}>
+                          {mechanic.mechanicName}
                         </Text>
-                      </Avatar>
-                    </MantineTooltip>
-                  )}
-                  <Text size="xs">
-                    {job.title}{' '}
-                    <Text span c="dimmed">
-                      {job.bikeModel}
-                    </Text>
-                  </Text>
-                </Group>
-                <Text size="xs" c={chip.overdue ? 'danger' : 'dimmed'}>
-                  {chip.label}
-                </Text>
-              </Group>
-            );
-          })}
-          {dueSoon?.length === 0 && (
-            <Text size="xs" c="dimmed">
-              Nothing due soon.
-            </Text>
-          )}
-        </Stack>
+                        <Text size="sm" fw={700} className="tabular-nums">
+                          {mechanic.openJobs} open
+                        </Text>
+                      </Group>
+                      <Progress value={(mechanic.openJobs / maxJobs) * 100} color="steel" size="md" radius="xl" />
+                    </div>
+                  </Group>
+                );
+              })}
+          </Stack>
+        ) : (
+          <Text size="sm" c="dimmed">
+            No mechanics assigned yet.
+          </Text>
+        )}
       </Paper>
 
       {isSuperAdmin && comparison && comparison.length > 0 && (
@@ -476,9 +359,7 @@ export function DashboardPage() {
           <Grid>
             <Grid.Col span={{ base: 12, md: 4 }}>
               <Paper p="md" shadow="sm" h="100%">
-                <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="sm">
-                  Jobs by department
-                </Text>
+                <PanelHeading>Jobs by department</PanelHeading>
                 <ResponsiveContainer width="100%" height={200}>
                   <BarChart
                     data={comparison.map((d) => ({
@@ -488,10 +369,10 @@ export function DashboardPage() {
                     }))}
                   >
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--mantine-color-gray-2)" />
-                    <XAxis dataKey="name" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis allowDecimals={false} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={28} />
+                    <XAxis dataKey="name" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 12 }} axisLine={false} tickLine={false} width={28} />
                     <Tooltip />
-                    <Legend wrapperStyle={{ fontSize: 11 }} />
+                    <Legend wrapperStyle={{ fontSize: 12 }} />
                     <Bar dataKey="Open" fill={CHART_COLORS.steel} radius={[4, 4, 0, 0]} />
                     <Bar dataKey="Received today" fill={CHART_COLORS.brand} radius={[4, 4, 0, 0]} />
                   </BarChart>
@@ -501,18 +382,16 @@ export function DashboardPage() {
 
             <Grid.Col span={{ base: 12, md: 4 }}>
               <Paper p="md" shadow="sm" h="100%">
-                <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="sm">
-                  Revenue by department
-                </Text>
+                <PanelHeading>Revenue by department</PanelHeading>
                 <ResponsiveContainer width="100%" height={200}>
                   <BarChart
                     data={comparison.map((d) => ({ name: d.departmentName, Revenue: d.revenueToday, Unpaid: d.unpaidTotal }))}
                   >
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--mantine-color-gray-2)" />
-                    <XAxis dataKey="name" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis tickFormatter={(v: number) => money(v)} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={56} />
+                    <XAxis dataKey="name" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
+                    <YAxis tickFormatter={(v: number) => money(v)} tick={{ fontSize: 12 }} axisLine={false} tickLine={false} width={56} />
                     <Tooltip formatter={(v) => money(Number(v) || 0)} />
-                    <Legend wrapperStyle={{ fontSize: 11 }} />
+                    <Legend wrapperStyle={{ fontSize: 12 }} />
                     <Bar dataKey="Revenue" fill={CHART_COLORS.success} radius={[4, 4, 0, 0]} />
                     <Bar dataKey="Unpaid" fill={CHART_COLORS.danger} radius={[4, 4, 0, 0]} />
                   </BarChart>
@@ -522,14 +401,12 @@ export function DashboardPage() {
 
             <Grid.Col span={{ base: 12, md: 4 }}>
               <Paper p="md" shadow="sm" h="100%">
-                <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="sm">
-                  Throughput — completed, last 7 days
-                </Text>
+                <PanelHeading>Throughput — completed, last 7 days</PanelHeading>
                 <ResponsiveContainer width="100%" height={200}>
                   <BarChart data={comparison.map((d) => ({ name: d.departmentName, Completed: d.throughputLast7Days }))}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--mantine-color-gray-2)" />
-                    <XAxis dataKey="name" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis allowDecimals={false} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={28} />
+                    <XAxis dataKey="name" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 12 }} axisLine={false} tickLine={false} width={28} />
                     <Tooltip />
                     <Bar dataKey="Completed" fill={CHART_COLORS.brand} radius={[4, 4, 0, 0]} />
                   </BarChart>
@@ -537,33 +414,209 @@ export function DashboardPage() {
               </Paper>
             </Grid.Col>
           </Grid>
+        </>
+      )}
 
+      <Title order={4} mt="sm">
+        Details
+      </Title>
+
+      <Paper p="md" shadow="sm">
+        <PanelHeading>Due soon</PanelHeading>
+        <Table.ScrollContainer minWidth={420}>
+          <Table verticalSpacing="xs" highlightOnHover>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Job</Table.Th>
+                <Table.Th>Mechanic</Table.Th>
+                <Table.Th style={{ textAlign: 'right' }}>Due</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {dueSoon?.map((job) => {
+                const chip = dueChip(job.dueDate);
+                const mechanic = mechanics?.find((m) => m.id === job.assignedMechanicId);
+                return (
+                  <Table.Tr key={job.id} style={{ cursor: 'pointer' }} onClick={() => navigate(`/jobs/${job.id}`)}>
+                    <Table.Td>
+                      <Text size="sm">
+                        {job.title} <Text span c="dimmed" size="sm">{job.bikeModel}</Text>
+                      </Text>
+                    </Table.Td>
+                    <Table.Td>
+                      {mechanic ? (
+                        <Group gap={6} wrap="nowrap">
+                          <Avatar size={20} radius="xl" color="steel">
+                            <Text fz={9} fw={700}>
+                              {initials(mechanic.fullName)}
+                            </Text>
+                          </Avatar>
+                          <Text size="sm">{mechanic.fullName}</Text>
+                        </Group>
+                      ) : (
+                        <Text size="sm" c="dimmed">
+                          Unassigned
+                        </Text>
+                      )}
+                    </Table.Td>
+                    <Table.Td style={{ textAlign: 'right' }}>
+                      <Text size="sm" fw={600} c={chip.overdue ? 'danger' : 'dimmed'}>
+                        {chip.label}
+                      </Text>
+                    </Table.Td>
+                  </Table.Tr>
+                );
+              })}
+              {dueSoon?.length === 0 && (
+                <Table.Tr>
+                  <Table.Td colSpan={3}>
+                    <Text size="sm" c="dimmed">
+                      Nothing due soon.
+                    </Text>
+                  </Table.Td>
+                </Table.Tr>
+              )}
+            </Table.Tbody>
+          </Table>
+        </Table.ScrollContainer>
+      </Paper>
+
+      <Grid>
+        <Grid.Col span={{ base: 12, md: 6 }}>
           <Paper p="md" shadow="sm">
-            <Group gap={6} mb="sm">
-              <IconActivity size={14} style={{ color: 'var(--mantine-color-dimmed)' }} />
-              <Text size="xs" fw={700} tt="uppercase" c="dimmed">
-                Live activity — all departments
-              </Text>
-            </Group>
-            <Stack gap="xs">
+            <PanelHeading>Unpaid bills — top {unpaidBills?.rows.length ?? 0}</PanelHeading>
+            <Table verticalSpacing="xs" highlightOnHover>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Job</Table.Th>
+                  <Table.Th style={{ textAlign: 'right' }}>Amount</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {unpaidBills?.rows.map((row) => (
+                  <Table.Tr key={row.billId}>
+                    <Table.Td>
+                      <Text size="sm" lineClamp={1}>
+                        {row.title} <Text span c="dimmed" size="sm">{row.bikeModel}</Text>
+                      </Text>
+                    </Table.Td>
+                    <Table.Td style={{ textAlign: 'right' }}>
+                      <Text size="sm" fw={700} c="danger" className="tabular-nums">
+                        {money(row.total)}
+                      </Text>
+                    </Table.Td>
+                  </Table.Tr>
+                ))}
+                {unpaidBills?.rows.length === 0 && (
+                  <Table.Tr>
+                    <Table.Td colSpan={2}>
+                      <Text size="sm" c="dimmed">
+                        No unpaid bills.
+                      </Text>
+                    </Table.Td>
+                  </Table.Tr>
+                )}
+              </Table.Tbody>
+            </Table>
+            <Text size="sm" fw={600} c="brand" mt="sm" style={{ cursor: 'pointer' }} onClick={() => navigate('/bills')}>
+              View all {unpaidBills?.totalCount ?? 0} →
+            </Text>
+          </Paper>
+        </Grid.Col>
+
+        <Grid.Col span={{ base: 12, md: 6 }}>
+          <Paper p="md" shadow="sm">
+            <PanelHeading>Recent payments</PanelHeading>
+            <Table verticalSpacing="xs" highlightOnHover>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Job</Table.Th>
+                  <Table.Th>Paid</Table.Th>
+                  <Table.Th style={{ textAlign: 'right' }}>Amount</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {recentPayments?.map((payment) => {
+                  const clickable = !payment.jobDeleted;
+                  return (
+                    <Table.Tr
+                      key={payment.billId}
+                      style={{ cursor: clickable ? 'pointer' : 'default' }}
+                      onClick={clickable ? () => navigate(`/jobs/${payment.jobId}`) : undefined}
+                    >
+                      <Table.Td>
+                        <Text size="sm" lineClamp={1} c={payment.jobDeleted ? 'dimmed' : undefined}>
+                          {payment.title} <Text span c="dimmed" size="sm">{payment.bikeModel}</Text>
+                        </Text>
+                      </Table.Td>
+                      <Table.Td>
+                        <Text size="xs" c="dimmed">
+                          {timeAgo(payment.paidAtUtc)}
+                        </Text>
+                      </Table.Td>
+                      <Table.Td style={{ textAlign: 'right' }}>
+                        <Text size="sm" fw={700} c="success" className="tabular-nums">
+                          {money(payment.total)}
+                        </Text>
+                      </Table.Td>
+                    </Table.Tr>
+                  );
+                })}
+                {recentPayments?.length === 0 && (
+                  <Table.Tr>
+                    <Table.Td colSpan={3}>
+                      <Text size="sm" c="dimmed">
+                        No payments yet.
+                      </Text>
+                    </Table.Td>
+                  </Table.Tr>
+                )}
+              </Table.Tbody>
+            </Table>
+          </Paper>
+        </Grid.Col>
+      </Grid>
+
+      {isSuperAdmin && comparison && comparison.length > 0 && (
+        <Paper p="md" shadow="sm">
+          <Group gap={6} mb="sm">
+            <IconActivity size={15} style={{ color: 'var(--mantine-color-dimmed)' }} />
+            <PanelHeading>Live activity — all departments</PanelHeading>
+          </Group>
+          <Table verticalSpacing="xs" highlightOnHover>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Message</Table.Th>
+                <Table.Th style={{ textAlign: 'right' }}>When</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
               {notifications?.items.map((n) => (
-                <Group key={n.id} justify="space-between" wrap="nowrap">
-                  <Text size="xs" lineClamp={1}>
-                    {n.message}
-                  </Text>
-                  <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>
-                    {timeAgo(n.createdAtUtc)}
-                  </Text>
-                </Group>
+                <Table.Tr key={n.id}>
+                  <Table.Td>
+                    <Text size="sm" lineClamp={1}>
+                      {n.message}
+                    </Text>
+                  </Table.Td>
+                  <Table.Td style={{ textAlign: 'right' }}>
+                    <Text size="xs" c="dimmed">
+                      {timeAgo(n.createdAtUtc)}
+                    </Text>
+                  </Table.Td>
+                </Table.Tr>
               ))}
               {notifications?.items.length === 0 && (
-                <Text size="xs" c="dimmed">
-                  No recent activity.
-                </Text>
+                <Table.Tr>
+                  <Table.Td colSpan={2}>
+                    <Text size="sm" c="dimmed">
+                      No recent activity.
+                    </Text>
+                  </Table.Td>
+                </Table.Tr>
               )}
-            </Stack>
-          </Paper>
-        </>
+            </Table.Tbody>
+          </Table>
+        </Paper>
       )}
     </Stack>
   );
