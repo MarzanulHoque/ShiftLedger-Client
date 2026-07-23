@@ -1,9 +1,11 @@
 import { Group, Pagination, Paper, Select, Table, Text } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 import type { JobStatus } from '../../api/types';
+import { useAuthStore } from '../../auth/store';
 import { formatDate } from '../../lib/date';
 import { formatJobNumber } from '../../lib/identifiers';
 import { STATUS_META } from '../../lib/statusColors';
+import { useDepartments } from '../departments/queries';
 import { useMechanics } from '../users/queries';
 import { useJobsList } from './queries';
 import { JobStatusBadge } from './JobStatusBadge';
@@ -14,23 +16,31 @@ const PAGE_SIZE = 20;
 export function JobsList({
   status,
   mechanicId,
+  departmentId,
   onStatusChange,
   onMechanicChange,
+  onDepartmentChange,
   page,
   onPageChange,
 }: {
   status: JobStatus | null;
   mechanicId: string | null;
+  departmentId: string | null;
   onStatusChange: (value: JobStatus | null) => void;
   onMechanicChange: (value: string | null) => void;
+  onDepartmentChange: (value: string | null) => void;
   page: number;
   onPageChange: (page: number) => void;
 }) {
   const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
+  const isSuperAdmin = user?.role === 'SuperAdmin';
   const { data: mechanics } = useMechanics();
+  const { data: departments } = useDepartments();
   const { data, isLoading } = useJobsList({
     status: status ?? undefined,
     mechanicId: mechanicId ?? undefined,
+    departmentId: departmentId ?? undefined,
     page,
     pageSize: PAGE_SIZE,
   });
@@ -40,6 +50,19 @@ export function JobsList({
   return (
     <>
       <Group mb="sm">
+        {isSuperAdmin && (
+          <Select
+            placeholder="Department: All"
+            clearable
+            data={departments?.map((d) => ({ value: d.id, label: d.name })) ?? []}
+            value={departmentId}
+            onChange={(value) => {
+              onDepartmentChange(value);
+              onPageChange(1);
+            }}
+            w={200}
+          />
+        )}
         <Select
           placeholder="Status: All"
           clearable

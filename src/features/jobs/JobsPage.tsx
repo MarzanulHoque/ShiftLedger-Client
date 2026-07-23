@@ -116,8 +116,10 @@ export function JobsPage() {
         <JobsList
           status={status}
           mechanicId={mechanicId}
+          departmentId={departmentId}
           onStatusChange={setStatus}
           onMechanicChange={setMechanicId}
+          onDepartmentChange={setDepartmentId}
           page={page}
           onPageChange={setPage}
         />
