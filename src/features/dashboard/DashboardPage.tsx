@@ -147,7 +147,7 @@ export function DashboardPage() {
   const { data: orgSettings } = useOrgSettings();
   const { data: dashboard, isLoading } = useAdminDashboard();
   const { data: yesterday } = useYesterdayDashboard();
-  const { data: unpaidBills } = useTopUnpaidBills(3);
+  const { data: unpaidBills } = useTopUnpaidBills(6);
   const { data: dueSoon } = useDueSoonJobs(5);
   const { data: revenueTrend } = useRevenueTrend(14);
   const { data: recentPayments } = useRecentPayments(6);
@@ -480,7 +480,7 @@ export function DashboardPage() {
 
       <Grid>
         <Grid.Col span={{ base: 12, md: 6 }}>
-          <Paper p="md" shadow="sm">
+          <Paper p="md" shadow="sm" h="100%" style={{ display: 'flex', flexDirection: 'column' }}>
             <PanelHeading>Unpaid bills — top {unpaidBills?.rows.length ?? 0}</PanelHeading>
             <Table verticalSpacing="xs" highlightOnHover>
               <Table.Thead>
@@ -515,14 +515,14 @@ export function DashboardPage() {
                 )}
               </Table.Tbody>
             </Table>
-            <Text size="sm" fw={600} c="brand" mt="sm" style={{ cursor: 'pointer' }} onClick={() => navigate('/bills')}>
+            <Text size="sm" fw={600} c="brand" mt="auto" pt="sm" style={{ cursor: 'pointer' }} onClick={() => navigate('/bills')}>
               View all {unpaidBills?.totalCount ?? 0} →
             </Text>
           </Paper>
         </Grid.Col>
 
         <Grid.Col span={{ base: 12, md: 6 }}>
-          <Paper p="md" shadow="sm">
+          <Paper p="md" shadow="sm" h="100%" style={{ display: 'flex', flexDirection: 'column' }}>
             <PanelHeading>Recent payments</PanelHeading>
             <Table verticalSpacing="xs" highlightOnHover>
               <Table.Thead>
