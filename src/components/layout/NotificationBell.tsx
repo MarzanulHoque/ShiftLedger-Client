@@ -28,10 +28,16 @@ export function NotificationBell() {
           disabled={unreadCount === 0}
           label={unreadCount > 9 ? '9+' : unreadCount}
           size={17}
-          offset={3}
-          color="danger"
-          withBorder
-          styles={{ indicator: { fontWeight: 700, fontSize: 10 } }}
+          offset={10}
+          styles={{
+            root: { '--indicator-color': 'transparent' },
+            indicator: {
+              color: 'var(--mantine-color-danger-6)',
+              fontWeight: 700,
+              fontSize: 11,
+              boxShadow: 'none',
+            },
+          }}
         >
           <ActionIcon variant="subtle" color="gray" radius="xl" size={48} aria-label="Notifications">
             <IconBell size={28} />
