@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Button, Group, SegmentedControl, Select, Stack, Title } from '@mantine/core';
 import type { JobPriority, JobStatus } from '../../api/types';
+import { dueChip } from '../../lib/dueChip';
 import { useMechanics } from '../users/queries';
 import { useJobBoard } from './queries';
 import { JobsBoard } from './JobsBoard';
@@ -16,14 +17,22 @@ export function JobsPage() {
   const [createOpened, setCreateOpened] = useState(false);
   const [mechanicId, setMechanicId] = useState<string | null>(null);
   const [priority, setPriority] = useState<JobPriority | null>(null);
+  const [dueFilter, setDueFilter] = useState<'overdue' | 'soon' | null>(null);
   const [status, setStatus] = useState<JobStatus | null>(null);
   const [page, setPage] = useState(1);
 
   const { data: mechanics } = useMechanics();
   const { data: boardJobs, isLoading: boardLoading } = useJobBoard(mechanicId ?? undefined);
   // Client-side: the board already pulls the caller's full (department-scoped) job set in one
-  // page, so a second filter dimension doesn't need its own backend query param.
-  const boardItems = priority ? boardJobs?.items.filter((j) => j.priority === priority) : boardJobs?.items;
+  // page, so these filter dimensions don't need their own backend query params.
+  let boardItems = boardJobs?.items;
+  if (priority) boardItems = boardItems?.filter((j) => j.priority === priority);
+  if (dueFilter) {
+    boardItems = boardItems?.filter((j) => {
+      const chip = dueChip(j.dueDate);
+      return dueFilter === 'overdue' ? chip.overdue : chip.soon;
+    });
+  }
 
   // Deep link from the dashboard's "+ New job" quick action (/jobs?new=1).
   useEffect(() => {
@@ -60,6 +69,17 @@ export function JobsPage() {
               data={['Low', 'Medium', 'High']}
               value={priority}
               onChange={(value) => setPriority(value as JobPriority | null)}
+              w={160}
+            />
+            <Select
+              placeholder="Due: All"
+              clearable
+              data={[
+                { value: 'overdue', label: 'Overdue' },
+                { value: 'soon', label: 'Due soon' },
+              ]}
+              value={dueFilter}
+              onChange={(value) => setDueFilter(value as 'overdue' | 'soon' | null)}
               w={160}
             />
             <Select
