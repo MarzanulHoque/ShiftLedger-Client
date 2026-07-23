@@ -28,7 +28,7 @@ export function NotificationBell() {
           disabled={unreadCount === 0}
           label={unreadCount > 9 ? '9+' : unreadCount}
           size={17}
-          offset={3}
+          offset={0}
           color="danger"
           withBorder
           styles={{ indicator: { fontWeight: 700, fontSize: 10 } }}
