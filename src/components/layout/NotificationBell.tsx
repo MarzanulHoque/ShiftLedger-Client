@@ -22,7 +22,7 @@ export function NotificationBell() {
   return (
     <Popover width={320} position="bottom-end" shadow="md">
       <Popover.Target>
-        <ActionIcon variant="default" radius="xl" size="lg" aria-label="Notifications">
+        <ActionIcon variant="subtle" color="gray" radius="xl" size="lg" aria-label="Notifications">
           <Indicator disabled={unreadCount === 0} label={unreadCount} size={16}>
             <IconBell size={18} />
           </Indicator>
