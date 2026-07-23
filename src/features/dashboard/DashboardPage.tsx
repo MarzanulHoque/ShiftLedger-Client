@@ -17,8 +17,6 @@ import { useQuery } from '@tanstack/react-query';
 import {
   Area,
   AreaChart,
-  Bar,
-  BarChart,
   CartesianGrid,
   Cell,
   Legend,
@@ -56,6 +54,18 @@ import {
 // empty panel instead of a real (if flat) chart. Delivered is a footnote, not a segment,
 // matching the wireframe ("+N delivered, out of the active view above").
 const BAR_STATUSES = ['Received', 'InProgress', 'Completed'] as const;
+
+// Cycled by index across however many departments a tenant has — unlike job status, departments
+// have no fixed identity/color of their own, so this is just a pleasant, distinct rotation of the
+// existing chart palette rather than a semantic mapping.
+const DEPARTMENT_COLORS = [
+  CHART_COLORS.steel,
+  CHART_COLORS.brand,
+  CHART_COLORS.success,
+  CHART_COLORS.danger,
+  CHART_COLORS.slate,
+  CHART_COLORS.slateDark,
+];
 
 // Section header used above every panel — one size/weight so the eye learns a single landmark
 // pattern instead of re-parsing each panel's hierarchy from scratch.
@@ -313,6 +323,111 @@ export function DashboardPage() {
         </Grid.Col>
       </Grid>
 
+      {isSuperAdmin && comparison && comparison.length > 0 && (
+        <>
+          <Title order={4} mt="sm">
+            Department comparison
+          </Title>
+          <Grid>
+            <Grid.Col span={{ base: 12, md: 4 }}>
+              <Paper p="md" shadow="sm" h="100%">
+                <PanelHeading>Jobs by department</PanelHeading>
+                {comparison.some((d) => d.openJobs > 0) ? (
+                  <ResponsiveContainer width="100%" height={200}>
+                    <PieChart>
+                      <Pie
+                        data={comparison.map((d) => ({ name: d.departmentName, value: d.openJobs }))}
+                        dataKey="value"
+                        nameKey="name"
+                        innerRadius={46}
+                        outerRadius={72}
+                        paddingAngle={3}
+                      >
+                        {comparison.map((d, i) => (
+                          <Cell key={d.departmentId} fill={DEPARTMENT_COLORS[i % DEPARTMENT_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(v) => `${v} open`} />
+                      <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <Text size="sm" c="dimmed" ta="center" py="xl">
+                    No open jobs.
+                  </Text>
+                )}
+                <Text size="xs" c="dimmed" mt="xs" ta="center">
+                  {comparison.reduce((sum, d) => sum + d.jobsReceivedToday, 0)} received today across departments
+                </Text>
+              </Paper>
+            </Grid.Col>
+
+            <Grid.Col span={{ base: 12, md: 4 }}>
+              <Paper p="md" shadow="sm" h="100%">
+                <PanelHeading>Revenue by department</PanelHeading>
+                {comparison.some((d) => d.revenueToday > 0) ? (
+                  <ResponsiveContainer width="100%" height={200}>
+                    <PieChart>
+                      <Pie
+                        data={comparison.map((d) => ({ name: d.departmentName, value: d.revenueToday }))}
+                        dataKey="value"
+                        nameKey="name"
+                        innerRadius={46}
+                        outerRadius={72}
+                        paddingAngle={3}
+                      >
+                        {comparison.map((d, i) => (
+                          <Cell key={d.departmentId} fill={DEPARTMENT_COLORS[i % DEPARTMENT_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(v) => money(Number(v) || 0)} />
+                      <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <Text size="sm" c="dimmed" ta="center" py="xl">
+                    No revenue today.
+                  </Text>
+                )}
+                <Text size="xs" c="dimmed" mt="xs" ta="center">
+                  {money(comparison.reduce((sum, d) => sum + d.unpaidTotal, 0))} unpaid across departments
+                </Text>
+              </Paper>
+            </Grid.Col>
+
+            <Grid.Col span={{ base: 12, md: 4 }}>
+              <Paper p="md" shadow="sm" h="100%">
+                <PanelHeading>Throughput — completed, last 7 days</PanelHeading>
+                {comparison.some((d) => d.throughputLast7Days > 0) ? (
+                  <ResponsiveContainer width="100%" height={200}>
+                    <PieChart>
+                      <Pie
+                        data={comparison.map((d) => ({ name: d.departmentName, value: d.throughputLast7Days }))}
+                        dataKey="value"
+                        nameKey="name"
+                        innerRadius={46}
+                        outerRadius={72}
+                        paddingAngle={3}
+                      >
+                        {comparison.map((d, i) => (
+                          <Cell key={d.departmentId} fill={DEPARTMENT_COLORS[i % DEPARTMENT_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(v) => `${v} completed`} />
+                      <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <Text size="sm" c="dimmed" ta="center" py="xl">
+                    Nothing completed in the last 7 days.
+                  </Text>
+                )}
+              </Paper>
+            </Grid.Col>
+          </Grid>
+        </>
+      )}
+
       <Paper p="md" shadow="sm">
         <PanelHeading>Mechanic workload</PanelHeading>
         {dashboard.mechanicWorkload.length > 0 ? (
@@ -347,72 +462,6 @@ export function DashboardPage() {
           </Text>
         )}
       </Paper>
-
-      {isSuperAdmin && comparison && comparison.length > 0 && (
-        <>
-          <Title order={4} mt="sm">
-            Department comparison
-          </Title>
-          <Grid>
-            <Grid.Col span={{ base: 12, md: 4 }}>
-              <Paper p="md" shadow="sm" h="100%">
-                <PanelHeading>Jobs by department</PanelHeading>
-                <ResponsiveContainer width="100%" height={200}>
-                  <BarChart
-                    data={comparison.map((d) => ({
-                      name: d.departmentName,
-                      Open: d.openJobs,
-                      'Received today': d.jobsReceivedToday,
-                    }))}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--mantine-color-gray-2)" />
-                    <XAxis dataKey="name" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
-                    <YAxis allowDecimals={false} tick={{ fontSize: 12 }} axisLine={false} tickLine={false} width={28} />
-                    <Tooltip />
-                    <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Bar dataKey="Open" fill={CHART_COLORS.steel} radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="Received today" fill={CHART_COLORS.brand} radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </Paper>
-            </Grid.Col>
-
-            <Grid.Col span={{ base: 12, md: 4 }}>
-              <Paper p="md" shadow="sm" h="100%">
-                <PanelHeading>Revenue by department</PanelHeading>
-                <ResponsiveContainer width="100%" height={200}>
-                  <BarChart
-                    data={comparison.map((d) => ({ name: d.departmentName, Revenue: d.revenueToday, Unpaid: d.unpaidTotal }))}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--mantine-color-gray-2)" />
-                    <XAxis dataKey="name" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
-                    <YAxis tickFormatter={(v: number) => money(v)} tick={{ fontSize: 12 }} axisLine={false} tickLine={false} width={56} />
-                    <Tooltip formatter={(v) => money(Number(v) || 0)} />
-                    <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Bar dataKey="Revenue" fill={CHART_COLORS.success} radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="Unpaid" fill={CHART_COLORS.danger} radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </Paper>
-            </Grid.Col>
-
-            <Grid.Col span={{ base: 12, md: 4 }}>
-              <Paper p="md" shadow="sm" h="100%">
-                <PanelHeading>Throughput — completed, last 7 days</PanelHeading>
-                <ResponsiveContainer width="100%" height={200}>
-                  <BarChart data={comparison.map((d) => ({ name: d.departmentName, Completed: d.throughputLast7Days }))}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--mantine-color-gray-2)" />
-                    <XAxis dataKey="name" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
-                    <YAxis allowDecimals={false} tick={{ fontSize: 12 }} axisLine={false} tickLine={false} width={28} />
-                    <Tooltip />
-                    <Bar dataKey="Completed" fill={CHART_COLORS.brand} radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </Paper>
-            </Grid.Col>
-          </Grid>
-        </>
-      )}
 
       <Title order={4} mt="sm">
         Details
