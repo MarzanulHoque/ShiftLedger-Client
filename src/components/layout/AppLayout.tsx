@@ -13,10 +13,9 @@ import { Link, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../auth/store';
 import { initials } from '../../lib/initials';
 import { useUsers } from '../../features/users/queries';
+import { useNotificationsSocket } from '../../features/notifications/useNotificationsSocket';
 import { MechanicPlaceholder } from './MechanicPlaceholder';
-// Notifications (bell + SignalR live push) are unplugged for now, per request — the components
-// and API still exist under features/notifications and api/notifications.ts, just not wired in
-// here. Re-add `useNotificationsSocket()` + `<NotificationBell />` to bring them back.
+import { NotificationBell } from './NotificationBell';
 
 const NAV_ITEMS = [
   { to: '/dashboard', label: 'Dashboard', icon: IconDashboard },
@@ -32,6 +31,7 @@ export function AppLayout() {
   const location = useLocation();
   const { data: users } = useUsers();
   const currentUserName = users?.find((u) => u.id === user?.id)?.fullName;
+  useNotificationsSocket();
 
   // A valid accessToken but no decoded user means the token's claims didn't parse as expected
   // (see lib/jwt.ts) — that's a broken session, not a legitimate mechanic one, so force a
@@ -75,6 +75,7 @@ export function AppLayout() {
             </Text>
           </Group>
           <Group gap="sm">
+            <NotificationBell />
             <Menu shadow="md" width={200} position="bottom-end">
               <Menu.Target>
                 <UnstyledButton>

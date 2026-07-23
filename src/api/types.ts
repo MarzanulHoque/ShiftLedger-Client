@@ -15,7 +15,13 @@ export type LineItemType = 'Labor' | 'Part';
 
 export type ReportType = 'Jobs' | 'Revenue' | 'UnpaidBills' | 'BillingHistory' | 'MechanicProductivity';
 
-export type NotificationType = 'JobAssigned' | 'JobStatusChanged' | 'BillPaid';
+export type NotificationType =
+  | 'JobAssigned'
+  | 'JobStatusChanged'
+  | 'BillPaid'
+  | 'JobCreated'
+  | 'JobOverdue'
+  | 'BillUnpaid';
 
 export interface AuthResult {
   accessToken: string;
