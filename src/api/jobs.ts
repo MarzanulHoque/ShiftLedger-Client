@@ -42,6 +42,7 @@ export interface CreateJobRequest {
   assignedMechanicId?: string | null;
   receivedDate?: string | null;
   dueDate?: string | null;
+  departmentId: string;
 }
 
 export function createJob(request: CreateJobRequest) {
