@@ -125,6 +125,17 @@ export interface MyDashboardDto {
   myOpenJobs: JobDto[];
 }
 
+export interface DepartmentDashboardMetricsDto {
+  departmentId: string;
+  departmentName: string;
+  jobsReceivedToday: number;
+  openJobs: number;
+  throughputLast7Days: number;
+  unpaidBills: number;
+  unpaidTotal: number;
+  revenueToday: number;
+}
+
 export interface DepartmentDto {
   id: string;
   name: string;

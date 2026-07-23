@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Avatar, Button, Grid, Group, Loader, Paper, SimpleGrid, Stack, Text, ThemeIcon, Title, Tooltip as MantineTooltip } from '@mantine/core';
 import {
+  IconActivity,
   IconArrowDownRight,
   IconArrowRight,
   IconArrowUpRight,
@@ -12,6 +13,7 @@ import {
   type IconProps,
 } from '@tabler/icons-react';
 import type { ComponentType, ReactNode } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Area,
   AreaChart,
@@ -30,6 +32,7 @@ import {
 } from 'recharts';
 
 import dayjs from 'dayjs';
+import { getNotifications } from '../../api/notifications';
 import { useAuthStore } from '../../auth/store';
 import { CHART_COLORS, STATUS_CHART_COLOR } from '../../lib/chartColors';
 import { dueChip } from '../../lib/dueChip';
@@ -41,6 +44,7 @@ import { useOrgSettings } from '../orgSettings/queries';
 import { useMechanics, useUsers } from '../users/queries';
 import {
   useAdminDashboard,
+  useDashboardComparison,
   useDueSoonJobs,
   useRecentPayments,
   type RecentPaymentRow,
@@ -174,6 +178,14 @@ export function DashboardPage() {
   const { data: recentPayments } = useRecentPayments(6);
   const { data: mechanics } = useMechanics();
   const { data: users } = useUsers();
+  const isSuperAdmin = user?.role === 'SuperAdmin';
+  const { data: comparison } = useDashboardComparison();
+  // Same query key + args as NotificationBell, so both share one cache entry and one live
+  // SignalR-triggered refetch (see useNotificationsSocket.ts) instead of racing two separate ones.
+  const { data: notifications } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: () => getNotifications({ unreadOnly: false, pageSize: 10 }),
+  });
 
   if (isLoading || !dashboard) return <Loader />;
 
@@ -455,6 +467,104 @@ export function DashboardPage() {
           )}
         </Stack>
       </Paper>
+
+      {isSuperAdmin && comparison && comparison.length > 0 && (
+        <>
+          <Title order={4} mt="sm">
+            Department comparison
+          </Title>
+          <Grid>
+            <Grid.Col span={{ base: 12, md: 4 }}>
+              <Paper p="md" shadow="sm" h="100%">
+                <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="sm">
+                  Jobs by department
+                </Text>
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart
+                    data={comparison.map((d) => ({
+                      name: d.departmentName,
+                      Open: d.openJobs,
+                      'Received today': d.jobsReceivedToday,
+                    }))}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--mantine-color-gray-2)" />
+                    <XAxis dataKey="name" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={28} />
+                    <Tooltip />
+                    <Legend wrapperStyle={{ fontSize: 11 }} />
+                    <Bar dataKey="Open" fill={CHART_COLORS.steel} radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="Received today" fill={CHART_COLORS.brand} radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </Paper>
+            </Grid.Col>
+
+            <Grid.Col span={{ base: 12, md: 4 }}>
+              <Paper p="md" shadow="sm" h="100%">
+                <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="sm">
+                  Revenue by department
+                </Text>
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart
+                    data={comparison.map((d) => ({ name: d.departmentName, Revenue: d.revenueToday, Unpaid: d.unpaidTotal }))}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--mantine-color-gray-2)" />
+                    <XAxis dataKey="name" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tickFormatter={(v: number) => money(v)} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={56} />
+                    <Tooltip formatter={(v) => money(Number(v) || 0)} />
+                    <Legend wrapperStyle={{ fontSize: 11 }} />
+                    <Bar dataKey="Revenue" fill={CHART_COLORS.success} radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="Unpaid" fill={CHART_COLORS.danger} radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </Paper>
+            </Grid.Col>
+
+            <Grid.Col span={{ base: 12, md: 4 }}>
+              <Paper p="md" shadow="sm" h="100%">
+                <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="sm">
+                  Throughput — completed, last 7 days
+                </Text>
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart data={comparison.map((d) => ({ name: d.departmentName, Completed: d.throughputLast7Days }))}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--mantine-color-gray-2)" />
+                    <XAxis dataKey="name" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={28} />
+                    <Tooltip />
+                    <Bar dataKey="Completed" fill={CHART_COLORS.brand} radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </Paper>
+            </Grid.Col>
+          </Grid>
+
+          <Paper p="md" shadow="sm">
+            <Group gap={6} mb="sm">
+              <IconActivity size={14} style={{ color: 'var(--mantine-color-dimmed)' }} />
+              <Text size="xs" fw={700} tt="uppercase" c="dimmed">
+                Live activity — all departments
+              </Text>
+            </Group>
+            <Stack gap="xs">
+              {notifications?.items.map((n) => (
+                <Group key={n.id} justify="space-between" wrap="nowrap">
+                  <Text size="xs" lineClamp={1}>
+                    {n.message}
+                  </Text>
+                  <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>
+                    {timeAgo(n.createdAtUtc)}
+                  </Text>
+                </Group>
+              ))}
+              {notifications?.items.length === 0 && (
+                <Text size="xs" c="dimmed">
+                  No recent activity.
+                </Text>
+              )}
+            </Stack>
+          </Paper>
+        </>
+      )}
     </Stack>
   );
 }

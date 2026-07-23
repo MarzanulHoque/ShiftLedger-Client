@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import dayjs from 'dayjs';
-import { getAdminDashboard } from '../../api/dashboard';
+import { getAdminDashboard, getDashboardComparison } from '../../api/dashboard';
 import { getBills } from '../../api/bills';
 import { getJobs, getJobSummary } from '../../api/jobs';
 import { getReport } from '../../api/reports';
@@ -8,6 +8,12 @@ import type { JobDto } from '../../api/types';
 
 export function useAdminDashboard() {
   return useQuery({ queryKey: ['dashboard', 'admin'], queryFn: () => getAdminDashboard() });
+}
+
+// SuperAdmin cockpit only (P12) — DepartmentAdmin's own-department numbers already come from
+// useAdminDashboard, now that GetAdminDashboardQuery is department-scoped.
+export function useDashboardComparison() {
+  return useQuery({ queryKey: ['dashboard', 'comparison'], queryFn: () => getDashboardComparison() });
 }
 
 // Yesterday's snapshot, for "vs yesterday" trend deltas on the stat tiles — GetAdminDashboardQuery
@@ -85,11 +91,9 @@ export interface RecentPaymentRow {
   jobDeleted: boolean;
 }
 
-// A "recent activity" feed sourced from notifications would always be empty here: the backend
-// only ever notifies a job's assigned *mechanic* (JobAssigned/JobStatusChanged/BillPaid), never
-// the Admin who's looking at this dashboard. Recent payments (real paidAtUtc timestamps, already
-// available via the bills endpoint) is the closest genuinely-informative cross-job feed the
-// Admin's own data actually supports.
+// Recent payments, sourced straight from the bills endpoint rather than notifications — a
+// dedicated live activity feed (P12, cockpit only) now covers cross-department events via
+// GetNotifications instead, since P11 made those persist for admins too.
 export function useRecentPayments(limit = 6) {
   return useQuery({
     queryKey: ['dashboard', 'recent-payments', limit],
