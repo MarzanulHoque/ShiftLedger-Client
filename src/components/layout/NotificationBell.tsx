@@ -27,20 +27,20 @@ export function NotificationBell() {
         <Indicator
           disabled={unreadCount === 0}
           label={unreadCount > 9 ? '9+' : unreadCount}
-          size={17}
-          offset={10}
+          size={16}
+          offset={7}
           styles={{
             root: { '--indicator-color': 'transparent' },
             indicator: {
-              color: 'var(--mantine-color-danger-6)',
-              fontWeight: 700,
-              fontSize: 11,
+              color: 'var(--mantine-color-danger-7)',
+              fontWeight: 800,
+              fontSize: 12,
               boxShadow: 'none',
             },
           }}
         >
-          <ActionIcon variant="subtle" color="gray" radius="xl" size={48} aria-label="Notifications">
-            <IconBell size={28} />
+          <ActionIcon variant="subtle" color="gray" radius="xl" size={38} aria-label="Notifications">
+            <IconBell size={20} />
           </ActionIcon>
         </Indicator>
       </Popover.Target>
