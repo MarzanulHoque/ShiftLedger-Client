@@ -24,9 +24,16 @@ export function NotificationBell() {
       <Popover.Target>
         {/* Indicator wraps the button (not the icon inside it) — nesting it inside the ActionIcon
             let the button's own rounded clip-path cut a two-digit badge in half. */}
-        <Indicator disabled={unreadCount === 0} label={unreadCount > 9 ? '9+' : unreadCount} size={16} offset={4}>
-          <ActionIcon variant="subtle" color="gray" radius="xl" size="lg" aria-label="Notifications">
-            <IconBell size={18} />
+        <Indicator
+          disabled={unreadCount === 0}
+          label={unreadCount > 9 ? '9+' : unreadCount}
+          size={13}
+          offset={6}
+          color="transparent"
+          styles={{ indicator: { color: 'var(--mantine-color-danger-6)', fontWeight: 700, boxShadow: 'none' } }}
+        >
+          <ActionIcon variant="subtle" color="gray" radius="xl" size={48} aria-label="Notifications">
+            <IconBell size={28} />
           </ActionIcon>
         </Indicator>
       </Popover.Target>
