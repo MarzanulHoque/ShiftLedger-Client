@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Button, Group, SegmentedControl, Select, Stack, Title } from '@mantine/core';
 import type { JobPriority, JobStatus } from '../../api/types';
+import { useAuthStore } from '../../auth/store';
 import { dueChip } from '../../lib/dueChip';
+import { useDepartments } from '../departments/queries';
 import { useMechanics } from '../users/queries';
 import { useJobBoard } from './queries';
 import { JobsBoard } from './JobsBoard';
@@ -16,13 +18,17 @@ export function JobsPage() {
   const [view, setView] = useState<View>('board');
   const [createOpened, setCreateOpened] = useState(false);
   const [mechanicId, setMechanicId] = useState<string | null>(null);
+  const [departmentId, setDepartmentId] = useState<string | null>(null);
   const [priority, setPriority] = useState<JobPriority | null>(null);
   const [dueFilter, setDueFilter] = useState<'overdue' | 'soon' | null>(null);
   const [status, setStatus] = useState<JobStatus | null>(null);
   const [page, setPage] = useState(1);
 
+  const user = useAuthStore((s) => s.user);
+  const isSuperAdmin = user?.role === 'SuperAdmin';
   const { data: mechanics } = useMechanics();
-  const { data: boardJobs, isLoading: boardLoading } = useJobBoard(mechanicId ?? undefined);
+  const { data: departments } = useDepartments();
+  const { data: boardJobs, isLoading: boardLoading } = useJobBoard(mechanicId ?? undefined, departmentId ?? undefined);
   // Client-side: the board already pulls the caller's full (department-scoped) job set in one
   // page, so these filter dimensions don't need their own backend query params.
   let boardItems = boardJobs?.items;
@@ -63,6 +69,16 @@ export function JobsPage() {
         />
         {view === 'board' && (
           <Group gap="sm">
+            {isSuperAdmin && (
+              <Select
+                placeholder="Department: All"
+                clearable
+                data={departments?.map((d) => ({ value: d.id, label: d.name })) ?? []}
+                value={departmentId}
+                onChange={setDepartmentId}
+                w={200}
+              />
+            )}
             <Select
               placeholder="Priority: All"
               clearable

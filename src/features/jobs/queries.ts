@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { getJob, getJobComments, getJobHistory, getJobs, type GetJobsParams } from '../../api/jobs';
 
-export function useJobBoard(mechanicId?: string) {
+export function useJobBoard(mechanicId?: string, departmentId?: string) {
   return useQuery({
-    queryKey: ['jobs', 'board', mechanicId],
-    queryFn: () => getJobs({ mechanicId, pageSize: 100 }),
+    queryKey: ['jobs', 'board', mechanicId, departmentId],
+    queryFn: () => getJobs({ mechanicId, departmentId, pageSize: 100 }),
   });
 }
 

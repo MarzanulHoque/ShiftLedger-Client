@@ -5,6 +5,7 @@ import type { JobCommentDto, JobDto, JobHistoryEntryDto, JobPriority, JobStatus,
 export interface GetJobsParams {
   status?: JobStatus;
   mechanicId?: string;
+  departmentId?: string;
   page?: number;
   pageSize?: number;
 }
